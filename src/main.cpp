@@ -16,9 +16,9 @@
 
 #include <iostream>
 
-void processInput(GLFWwindow *window);
+void update(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 //sirina i visina prozora za renderovanje u pixelima
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -47,6 +47,9 @@ int main() {
     //funkcija koja se poziva svaki put kada se velicina prozora promeni
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    //bolja alternativa funkciji update; jednom se izvrsava
+    glfwSetKeyCallback(window, key_callback);
+
     // Pozivamo glad biblioteku da ucita sve nase opengl funkcije
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -56,6 +59,11 @@ int main() {
     // petlja za renderovanje
     while (!glfwWindowShouldClose(window)) {
 
+        //cistimo pozadinu prozora
+        //glClearColor(0.3, 0.4, 0.5, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        //update(window);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwPollEvents();
         glfwSwapBuffers(window);
@@ -72,4 +80,20 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
+//fukcija koja ce se pokretati kada korisnik aplikacije nesto uradi
+void update(GLFWwindow* window) {
+    //mogucnost zatvaranja prozora pritiskom na escape
+    if( glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+    if(key == GLFW_KEY_G && action == GLFW_PRESS) {
+        glClearColor(0.0, 1.0, 0.0, 1.0);
+    }
+}
 
