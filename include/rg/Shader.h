@@ -14,11 +14,11 @@
 #include <common.h>
 #include <glm/glm.hpp>
 class Shader {
-    unsigned int m_Id;
 public:
+    unsigned int m_Id;
     Shader(std::string vertexShaderPath, std::string fragmentShaderPath) {
-        appendShaderFolderIfNotPresent(vertexShaderPath);
-        appendShaderFolderIfNotPresent(fragmentShaderPath);
+        //appendShaderFolderIfNotPresent(vertexShaderPath);
+        //appendShaderFolderIfNotPresent(fragmentShaderPath);
         // build and compile our shader program
         // ------------------------------------
         // vertex shader
@@ -71,6 +71,7 @@ public:
     // ------------------------------------------------------------------------
     void use()
     {
+        ASSERT(m_Id > 0, "Use of undefined or deleted program!");
         glUseProgram(m_Id);
     }
     // utility uniform functions
@@ -131,12 +132,11 @@ public:
     {
         glUniformMatrix4fv(glGetUniformLocation(m_Id, name.c_str()), 1, GL_FALSE, &mat[0][0]);
     }
+
     void deleteProgram() {
         glDeleteProgram(m_Id);
         m_Id = 0;
     }
-
-
 
 };
 

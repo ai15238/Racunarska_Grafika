@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <learnopengl/shader.h>
+#include "rg/Shader.h"
 
 #include <string>
 #include <vector>
@@ -77,7 +77,7 @@ public:
                 number = std::to_string(heightNr++); // transfer unsigned int to stream
 
             // now set the sampler to the correct texture unit
-            glUniform1i(glGetUniformLocation(shader.ID, (glslIdentifierPrefix + name + number).c_str()), i);
+            glUniform1i(glGetUniformLocation(shader.m_Id, (glslIdentifierPrefix + name + number).c_str()), i);
             // and finally bind the texture
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
         }

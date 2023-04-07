@@ -95,6 +95,10 @@ public:
     { 
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value); 
     }
+    void deleteProgram() {
+        glDeleteProgram(ID);
+        ID = 0;
+    }
 
 private:
     // utility function for checking shader compilation/linking errors.
