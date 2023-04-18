@@ -13,6 +13,7 @@
 #include <rg/Shader.h>
 #include <learnopengl/camera.h>
 #include <learnopengl/model.h>
+#include "rg/Texture2D.h"
 
 #include <iostream>
 
@@ -60,9 +61,9 @@ int main() {
     Shader shader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
 
     float vertices[] = {
-            0.5f, -0.5f, 0.0, 1.0f, 0.0f, 0.0f, //levo
-            -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, //desno
-            0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f //gore
+            0.5f, -0.5f, 0.0, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //levo
+            -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,//desno
+            0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f //gore
     };
 
     unsigned int VBO, VAO;
@@ -75,14 +76,23 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO); //aktiviramo objekat
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3,GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3,GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
-    //glBindVertexArray(0);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    Texture2D texture("resources/textures/tekstura1.jpg", GL_REPEAT, GL_LINEAR, GL_RGB);
+    Texture2D texture2("resources/textures/tekstura3.jpg", GL_REPEAT, GL_LINEAR, GL_RGB);
+    shader.use();
+    shader.setInt("texture1", 0);
+    shader.setInt("texture2", 1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     // petlja za renderovanje
     while (!glfwWindowShouldClose(window)) {
@@ -91,11 +101,18 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // bind Texture
+        //glBindTexture(GL_TEXTURE_2D, texture);
+        texture.active(GL_TEXTURE0);
+        texture.bind();
+
+        texture2.active(GL_TEXTURE1);
+        texture2.bind();
         //draw triangle
         shader.use();
         //shader.setUniform4f("gColor", sin(glfwGetTime())/2.0+0.5, 0.0, 0.0, 1.0);
         //update(window);
-
+        shader.setFloat("p", sin(glfwGetTime())/2 + 0.5);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 

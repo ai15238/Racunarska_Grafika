@@ -7,7 +7,7 @@
 #include <stb_image.h>
 #include <vector>
 #include <string>
-#include <learnopengl/shader.h>
+#include <rg/Shader.h>
 #include <rg/mesh.h>
 
 #include <assimp/Importer.hpp>
@@ -170,7 +170,7 @@ unsigned int TextureFromFile(const char* filename, std::string directory) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     } else {
         ASSERT(false, "Failed to load texture image");
