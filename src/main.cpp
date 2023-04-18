@@ -25,6 +25,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+glm::vec3 position;
+
 int main() {
     //inicijalizacija glfw biblioteke i konfiguracija
     glfwInit();
@@ -50,7 +52,7 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     //bolja alternativa funkciji update; jednom se izvrsava
-    glfwSetKeyCallback(window, key_callback);
+    //glfwSetKeyCallback(window, key_callback);
 
     // Pozivamo glad biblioteku da ucita sve nase opengl funkcije
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
@@ -60,13 +62,26 @@ int main() {
 
     Shader shader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
 
-    float vertices[] = {
+    //triangle
+    /*float vertices[] = {
             0.5f, -0.5f, 0.0, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //levo
             -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,//desno
             0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f //gore
+    };*/
+    //square
+    float vertices[] = {
+            // pozzicija                        //koordinate tektura
+            0.5f, 0.5f, 0.0f, 1.0f, 1.0f, //gore desno
+            0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // dole desno
+            -0.5, -0.5f, 0.0f, 0.0f, 0.0f, //dole levo
+            -0.5f, 0.5f, 0.0f, 0.0f, 1.0f // gore levo
+    };
+    unsigned int indices[] = {
+            0, 1, 3, // prvi trougao
+            1, 2, 3 // drugi trougao
     };
 
-    unsigned int VBO, VAO;
+    unsigned int VBO, VAO, EBO;
     //Vertex buffer object - iz ram-a neke podatke ucitava na graficku karticu
 
     glGenVertexArrays(1, &VAO);
@@ -76,14 +91,18 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO); //aktiviramo objekat
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3,GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3,GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    //glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    //glEnableVertexAttribArray(2);
 
     Texture2D texture("resources/textures/tekstura1.jpg", GL_REPEAT, GL_LINEAR, GL_RGB);
     Texture2D texture2("resources/textures/tekstura3.jpg", GL_REPEAT, GL_LINEAR, GL_RGB);
@@ -97,6 +116,7 @@ int main() {
     // petlja za renderovanje
     while (!glfwWindowShouldClose(window)) {
 
+        update(window);
         //cistimo pozadinu prozora
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -108,13 +128,26 @@ int main() {
 
         texture2.active(GL_TEXTURE1);
         texture2.bind();
+
+        //transformacije - napravimo ih na procesoru, a onda matricu koju smo kreirali posaljemo a graficku karticu
+        //scaliranje (da bude 2x manji) pa transliranje
+        glm::mat4 m = glm::mat4(1.0f); // I
+        //skaliranje -> rotacija -> translacija
+        m = glm::translate(m, position); //glm::vec3(0.6, -0.5, 0.0)); // I * T
+        m = glm::rotate(m, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); //(I * T) * R
+        m = glm::scale(m, glm::vec3(0.2, 0.2, 1.0)); // (I * T * R) * S
+        // I*T*R*S*x <=> T(R(S(x)))
+        //model matricu koju smo definisali u vertex shader-u posaljemo na graficku
+        int locationId = glGetUniformLocation(shader.m_Id, "model");
+        glUniformMatrix4fv(locationId, 1, GL_FALSE, glm::value_ptr(m)); // &m[0][0]
+
         //draw triangle
         shader.use();
         //shader.setUniform4f("gColor", sin(glfwGetTime())/2.0+0.5, 0.0, 0.0, 1.0);
         //update(window);
         shader.setFloat("p", sin(glfwGetTime())/2 + 0.5);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
@@ -129,6 +162,7 @@ int main() {
     glfwTerminate();
     return 0;
 }
+
 // f-ja koja postavlja dimenzije unutar prozora za renderovanja
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     //kad god se promeni dimenzija prozora, glViewPort se poziva da se promeni i velicina unutar prozora
@@ -141,6 +175,14 @@ void update(GLFWwindow* window) {
     if( glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
+    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        position.y += 0.04;
+    if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        position.y -= 0.04;
+    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        position.x -= 0.04;
+    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        position.x += 0.04;
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
