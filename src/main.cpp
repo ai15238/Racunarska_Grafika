@@ -60,6 +60,8 @@ int main() {
         return -1;
     }
 
+    glEnable(GL_DEPTH_TEST);
+
     Shader shader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
 
     //triangle
@@ -69,7 +71,7 @@ int main() {
             0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f //gore
     };*/
     //square
-    float vertices[] = {
+    /*float vertices[] = {
             // pozzicija                        //koordinate tektura
             0.5f, 0.5f, 0.0f, 1.0f, 1.0f, //gore desno
             0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // dole desno
@@ -79,9 +81,67 @@ int main() {
     unsigned int indices[] = {
             0, 1, 3, // prvi trougao
             1, 2, 3 // drugi trougao
+    };*/
+    //crtamo kocku
+    float vertices[] = {
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+            0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
-    unsigned int VBO, VAO, EBO;
+    // world space positions of our cubes
+    glm::vec3 cubePositions[] = {
+            glm::vec3( 0.0f,  0.0f,  0.0f),
+            glm::vec3( 2.0f,  5.0f, -15.0f),
+            glm::vec3(-1.5f, -2.2f, -2.5f),
+            glm::vec3(-3.8f, -2.0f, -12.3f),
+            glm::vec3( 2.4f, -0.4f, -3.5f),
+            glm::vec3(-1.7f,  3.0f, -7.5f),
+            glm::vec3( 1.3f, -2.0f, -2.5f),
+            glm::vec3( 1.5f,  2.0f, -2.5f),
+            glm::vec3( 1.5f,  0.2f, -1.5f),
+            glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
+
+    unsigned int VBO, VAO;//, EBO;
     //Vertex buffer object - iz ram-a neke podatke ucitava na graficku karticu
 
     glGenVertexArrays(1, &VAO);
@@ -91,11 +151,11 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO); //aktiviramo objekat
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &EBO);
+    /*glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
 
-    glVertexAttribPointer(0, 3,GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3,GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) nullptr);
     glEnableVertexAttribArray(0);
 
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -119,7 +179,7 @@ int main() {
         update(window);
         //cistimo pozadinu prozora
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // bind Texture
         //glBindTexture(GL_TEXTURE_2D, texture);
@@ -131,24 +191,56 @@ int main() {
 
         //transformacije - napravimo ih na procesoru, a onda matricu koju smo kreirali posaljemo a graficku karticu
         //scaliranje (da bude 2x manji) pa transliranje
-        glm::mat4 m = glm::mat4(1.0f); // I
+        /*glm::mat4 m = glm::mat4(1.0f); // I
         //skaliranje -> rotacija -> translacija
         m = glm::translate(m, position); //glm::vec3(0.6, -0.5, 0.0)); // I * T
         m = glm::rotate(m, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); //(I * T) * R
         m = glm::scale(m, glm::vec3(0.2, 0.2, 1.0)); // (I * T * R) * S
-        // I*T*R*S*x <=> T(R(S(x)))
+*/        // I*T*R*S*x <=> T(R(S(x)))
         //model matricu koju smo definisali u vertex shader-u posaljemo na graficku
-        int locationId = glGetUniformLocation(shader.m_Id, "model");
-        glUniformMatrix4fv(locationId, 1, GL_FALSE, glm::value_ptr(m)); // &m[0][0]
+        //int locationId = glGetUniformLocation(shader.m_Id, "model");
+        //glUniformMatrix4fv(locationId, 1, GL_FALSE, glm::value_ptr(m)); // &m[0][0]
 
+        //koordinatni sistem - hocemo da napravimo da kvadrat bude zakrivljen
+        // objekat da bi se prikazao prolazi kroz 4 transformacije
+        // model matrica postavi objekat u svet
+        // view matrica transformise koordinate da izgledaju onako kako su iz ugla kamere
+        // matrica projekcije ih redukuje do -1,1
+        // viewport transformacija transformise u koordinate na ekranu
+
+        glm::mat4 view = glm::mat4(1.0f);
+        glm::mat4 projection = glm::mat4(1.0f);
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -6.0f));
+
+        projection = glm::perspective(glm::radians(45.0f), (float) SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+        unsigned int modelLocation = glGetUniformLocation(shader.m_Id, "model");
+        unsigned int viewLocation = glGetUniformLocation(shader.m_Id, "view");
+
+        //glUniformMatrix4fv(modelLocation, 1, GL_FALSE, &model[0][0]);
+        glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
+        shader.setMat4("projection", projection); //drugi nacin da se postavi
         //draw triangle
         shader.use();
         //shader.setUniform4f("gColor", sin(glfwGetTime())/2.0+0.5, 0.0, 0.0, 1.0);
         //update(window);
-        shader.setFloat("p", sin(glfwGetTime())/2 + 0.5);
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        //shader.setFloat("p", sin(glfwGetTime())/2 + 0.5);
 
+        glBindVertexArray(VAO);
+
+        for(int i=0; i<6; i++) {
+            glm::mat4 model = glm::mat4(1.0f);
+
+
+            // model matrica postavlja objekat u svet kako on treba da stoji
+            // hocemo da zarotiramo po x-osi
+            float angle = 20.0f * i;
+            model = glm::translate(model, cubePositions[i]);
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.5f, 1.0f, 0.0f));
+            shader.setMat4("model", model);
+            //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        }
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
