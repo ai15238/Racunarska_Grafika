@@ -21,11 +21,26 @@ void update(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
 //sirina i visina prozora za renderovanje u pixelima
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 glm::vec3 position;
+
+// kamera
+Camera camera;
+
+bool firstMouse = true;
+
+float lastX = 800.0 / 2.0;
+float lastY = 600.0 / 2.0; // definisemo kao centar ekrana ovu poslednju poz kursa
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
 
 int main() {
     //inicijalizacija glfw biblioteke i konfiguracija
@@ -51,6 +66,8 @@ int main() {
     //funkcija koja se poziva svaki put kada se velicina prozora promeni
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
     //bolja alternativa funkciji update; jednom se izvrsava
     //glfwSetKeyCallback(window, key_callback);
 
@@ -173,8 +190,19 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    camera.Position = glm::vec3(0,0,3);
+    camera.Front = glm::vec3(0,0,-1);
+    camera.Up = glm::vec3(0,1,0);
+
     // petlja za renderovanje
     while (!glfwWindowShouldClose(window)) {
+
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame; //za svaki frejm i za svaki prolazak kroz petlju renderovanja
+        // se izracuna koliko je vremena proteklo od kad se petlja rend zavrsila
+        //pa do trenutnig vremena i onda kada se to izr dobijamo koliko smo vremena proveli
+        // u racunanju tog frejma
 
         update(window);
         //cistimo pozadinu prozora
@@ -210,12 +238,25 @@ int main() {
 
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -6.0f));
+        //view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f + sin(glfwGetTime())));//da se kamera krece + sin...
 
-        projection = glm::perspective(glm::radians(45.0f), (float) SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(camera.Zoom), (float) SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
         unsigned int modelLocation = glGetUniformLocation(shader.m_Id, "model");
         unsigned int viewLocation = glGetUniformLocation(shader.m_Id, "view");
 
+        //da se vrtimo u krug a da uvek gledamo u koord pocetak
+        //glm::mat4 view = glm::mat4(1.0f);
+        /*float radius = 7;
+        float camX = sin(glfwGetTime()) * radius; // kamera koja kruzi oko scene i uvek gleda u kood poc
+        float camZ = cos(glfwGetTime()) * radius;
+        view = glm::lookAt(glm::vec3(camX,0,camZ), glm::vec3(0,0,0), glm::vec3(0, 1, 0));
+*/
+
+        // pravimo kameru da moze da se pomera po prostoru sa WASD
+        //scena se ne menja, jedino kamera
+        //cameraPos dodajemo na Front da ne bi gledalo u istu tacku kada pomeramo levo desno
+        //view = glm::lookAt(cameraPos, cameraFront + cameraPos, cameraUp);
+        view = camera.GetViewMatrix();
         //glUniformMatrix4fv(modelLocation, 1, GL_FALSE, &model[0][0]);
         glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
         shader.setMat4("projection", projection); //drugi nacin da se postavi
@@ -267,14 +308,29 @@ void update(GLFWwindow* window) {
     if( glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
+    //sve vrednosti u brzinama, kretanjima, skaliraju sa deltaTime
+    // npr ako nam je za preth frejm bilo potrebno dosta vremenna, npr za prethodni frejm nam je
+    //bilo potrebno 3s, mi moramo sada da povecamo za odgovarajuce deltaTime kako bi kamera
+    // bila prikazana na onoj poziciji na kojoj bi bila za 3s
+    const float cameraSpeed = 1.5 * deltaTime; // dodajemo da bismo se kretali malo sporije
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        position.y += 0.04;
+        //position.y += 0.04;
+        //cameraPos += cameraFront * cameraSpeed; // unapred, gledam u smeru napred
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        position.y -= 0.04;
+        //position.y -= 0.04;
+        //cameraPos -= cameraFront * cameraSpeed; //unazad
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        position.x -= 0.04;
+        //position.x -= 0.04;
+        //cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed; // levo
+        camera.ProcessKeyboard(LEFT, deltaTime);
     if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        position.x += 0.04;
+        //position.x += 0.04;
+        //cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed; //udesno, normalizujemo vektore
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+        //kada uzimamo vektore pravaca. Kad god nam treba da uzimamo smerove neke pa da nadovezujemo
+        // kada neki vektor treba da predstavlja neki pravac gledanja
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -283,3 +339,23 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    //kada pomeramo mis, moramo ponovo da racunamo vektore x, y
+    if(firstMouse) { //ako je bilo prvo pomeranje misa, postavicemo poziciju na kojoj smo prethodno bili, na trenutnu
+        lastX = xpos;
+        lastY = ypos;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
+    
+}
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    camera.ProcessMouseScroll(yoffset);
+
+}
