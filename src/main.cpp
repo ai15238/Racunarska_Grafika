@@ -87,6 +87,8 @@ int main() {
     Shader shader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
 
+   // Model ourModel("resources/objects/farmhouse/farmhouse/farmhouse_obj.obj");
+    Model ourModel("resources/objects/farmhouse/farmhouse/farmhouse_obj.obj");
 
     //triangle
     /*float vertices[] = {
@@ -266,7 +268,6 @@ int main() {
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -304,6 +305,8 @@ int main() {
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
 
+        ourModel.Draw(shader);
+
         // draw skybox as last
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
@@ -317,7 +320,6 @@ int main() {
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
-
 
         /*update(window);
         //cistimo pozadinu prozora
