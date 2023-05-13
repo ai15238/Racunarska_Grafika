@@ -84,11 +84,11 @@ int main() {
 
     glEnable(GL_DEPTH_TEST); //objekti koji su na sceni treba uvek da budu ispred skybox-a
 
-    Shader shader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
+    Shader shader("resources/shaders/cube.vs", "resources/shaders/cube.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
+    Shader modelShader("resources/shaders/model_loading.vs", "resources/shaders/model_loading.fs");
 
-   // Model ourModel("resources/objects/farmhouse/farmhouse/farmhouse_obj.obj");
-    Model ourModel("resources/objects/farmhouse/farmhouse/farmhouse_obj.obj");
+    Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
 
     //triangle
     /*float vertices[] = {
@@ -291,22 +291,37 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // draw scene as normal
-        shader.use();
+
+        modelShader.use();
+
         glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = camera.GetViewMatrix();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        shader.setMat4("model", model);
+        glm::mat4 view = camera.GetViewMatrix();
+        modelShader.setMat4("view", view);
+        modelShader.setMat4("projection", projection);
+        //modelShader.setMat4("model", model);
+
+        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        modelShader.setMat4("model", model);
+
+        ourModel.Draw(modelShader);
+
+        shader.use();
+        model = glm::mat4(1.0f);
+        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        shader.setMat4("model", model);
         // cubes
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexture);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
-
-        ourModel.Draw(shader);
-
         // draw skybox as last
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
