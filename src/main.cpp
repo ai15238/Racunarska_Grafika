@@ -88,8 +88,8 @@ int main() {
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
     Shader modelShader("resources/shaders/model_loading.vs", "resources/shaders/model_loading.fs");
 
-    Model ourModel(FileSystem::getPath("resources/objects/backpack/backpack.obj"));
-
+    Model house(FileSystem::getPath("resources/objects/snowflake1.obj"));
+    Model figure1(FileSystem::getPath("resources/objects/low_obj_15000/low_obj_15000.obj"));
     //triangle
     /*float vertices[] = {
             0.5f, -0.5f, 0.0, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //levo
@@ -294,18 +294,30 @@ int main() {
 
         modelShader.use();
 
+        // house TODO vratiti kucu i za pahulju uraditi sve sto treba, rotirati i staviti milion kako bi padale -probati
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         modelShader.setMat4("view", view);
         modelShader.setMat4("projection", projection);
-        //modelShader.setMat4("model", model);
 
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0f));
-        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        model = glm::translate(model, glm::vec3(1.0f, -2.0f, -4.0f));
+        model = glm::scale(model, glm::vec3(0.005f, 0.005f, 0.005f));
         modelShader.setMat4("model", model);
 
-        ourModel.Draw(modelShader);
+        house.Draw(modelShader);
+
+        model = glm::mat4(1.0f);
+        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
+        modelShader.setMat4("view", view);
+        modelShader.setMat4("projection", projection);
+        model = glm::translate(model, glm::vec3(1.0f, -2.0f, -4.0f));
+        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+        model = glm::rotate(model, (float)glm::radians(85.0), glm::vec3(-0.1, 0.0, 0.0));
+        modelShader.setMat4("model", model);
+
+        figure1.Draw(modelShader);
 
         shader.use();
         model = glm::mat4(1.0f);
@@ -313,7 +325,7 @@ int main() {
         view = camera.GetViewMatrix();
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::translate(model, glm::vec3(0.0f, 1.0f, 1.0f));
         model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
         shader.setMat4("model", model);
         // cubes
