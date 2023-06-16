@@ -16,6 +16,7 @@
 #include "rg/Texture2D.h"
 
 #include <iostream>
+#include <random>
 
 void update(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -31,6 +32,7 @@ unsigned int loadTexture(char const * path);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+const float BOUND = 100;
 glm::vec3 position;
 
 // kamera
@@ -90,10 +92,11 @@ int main() {
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
     Shader modelShader("resources/shaders/model_loading.vs", "resources/shaders/model_loading.fs");
 
-    Shader lightShader("resources/shaders/colors.vs","resources/shaders/colors.fs");
-    Shader lightCubeShader("resources/shaders/light_cube.vs","resources/shaders/light_cube.fs");
+    Shader lightShader("resources/shaders/colors.vs", "resources/shaders/colors.fs");
+    Shader lightCubeShader("resources/shaders/light_cube.vs", "resources/shaders/light_cube.fs");
 
-    Model house(FileSystem::getPath("resources/objects/snowflake/snowflake1.obj"));
+    Model snowflakes(FileSystem::getPath("resources/objects/snowflake/snowflake1.obj"));
+    Model house(FileSystem::getPath("resources/objects/farmhouse/farmhouse/farmhouse_obj.obj"));
     //Model figure1(FileSystem::getPath("resources/objects/low_obj_15000/low_obj_15000.obj"));
     //triangle
     /*float vertices[] = {
@@ -116,106 +119,106 @@ int main() {
     //crtamo kocku
     float cubeVertices[] = {
             // positions                      // texture Coords
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-            0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+            0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
 
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+            -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
 
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+            -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+            -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
 
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
 
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
 
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+            -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
     };
     float skyboxVertices[] = {
             // positions
-            -1.0f,  1.0f, -1.0f,
+            -1.0f, 1.0f, -1.0f,
             -1.0f, -1.0f, -1.0f,
             1.0f, -1.0f, -1.0f,
             1.0f, -1.0f, -1.0f,
-            1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
+            1.0f, 1.0f, -1.0f,
+            -1.0f, 1.0f, -1.0f,
 
-            -1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f, 1.0f,
             -1.0f, -1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f, -1.0f,
-            -1.0f,  1.0f,  1.0f,
-            -1.0f, -1.0f,  1.0f,
+            -1.0f, 1.0f, -1.0f,
+            -1.0f, 1.0f, -1.0f,
+            -1.0f, 1.0f, 1.0f,
+            -1.0f, -1.0f, 1.0f,
 
             1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f, -1.0f,
+            1.0f, -1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, -1.0f,
             1.0f, -1.0f, -1.0f,
 
-            -1.0f, -1.0f,  1.0f,
-            -1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f, -1.0f,  1.0f,
-            -1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f, 1.0f,
+            -1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f,
+            1.0f, -1.0f, 1.0f,
+            -1.0f, -1.0f, 1.0f,
 
-            -1.0f,  1.0f, -1.0f,
-            1.0f,  1.0f, -1.0f,
-            1.0f,  1.0f,  1.0f,
-            1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f,  1.0f,
-            -1.0f,  1.0f, -1.0f,
+            -1.0f, 1.0f, -1.0f,
+            1.0f, 1.0f, -1.0f,
+            1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f,
+            -1.0f, 1.0f, 1.0f,
+            -1.0f, 1.0f, -1.0f,
 
             -1.0f, -1.0f, -1.0f,
-            -1.0f, -1.0f,  1.0f,
+            -1.0f, -1.0f, 1.0f,
             1.0f, -1.0f, -1.0f,
             1.0f, -1.0f, -1.0f,
-            -1.0f, -1.0f,  1.0f,
-            1.0f, -1.0f,  1.0f
+            -1.0f, -1.0f, 1.0f,
+            1.0f, -1.0f, 1.0f
     };
 
     // world space positions of our cubes
-    glm::vec3 cubePositions[] = {
-            glm::vec3( 0.0f,  -2.0f,  -4.0f),
-            glm::vec3( 1.2f,  -2.0f, -4.0f),
+    /*glm::vec3 cubePositions[] = {
+            glm::vec3(0.0f, -2.0f, -4.0f),
+            glm::vec3(1.2f, -2.0f, -4.0f),
             glm::vec3(0.4f, -1.0f, -7.5f),
             glm::vec3(-1.2f, -2.0f, -5.3f),
-            glm::vec3( 3.0f, -1.7f, -5.5f),
-            glm::vec3(-2.4f,  -2.0f, -4.5f),
-            glm::vec3( 1.3f, -2.0f, -2.5f),
-            glm::vec3( 1.5f,  2.0f, -2.5f),
-            glm::vec3( 1.5f,  0.2f, -1.5f),
-            glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
+            glm::vec3(3.0f, -1.7f, -5.5f),
+            glm::vec3(-2.4f, -2.0f, -4.5f),
+            glm::vec3(1.3f, -2.0f, -2.5f),
+            glm::vec3(1.5f, 2.0f, -2.5f),
+            glm::vec3(1.5f, 0.2f, -1.5f),
+            glm::vec3(-1.3f, 1.0f, -1.5f)
+    };*/
 /*
     float lightCubeVertices[] = {
             -0.5f, -0.5f, -0.5f,
@@ -261,48 +264,87 @@ int main() {
             -0.5f,  0.5f, -0.5f
     };*/
     float lightCubeVertices[] = {
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-            0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+            0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+            0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+            0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+            -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-            0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-            0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-            0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+            0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+            0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+            0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+            -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
 
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+            -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+            -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+            -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
 
-            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-            0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-            0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+            0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+            0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+            0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+            0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+            0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
 
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-            0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+            0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+            0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+            0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+            -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
 
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-            0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-            0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+            0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+            0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+            0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+            -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f
     };
+    glm::vec3 positions[70000];
+    for(int i=0; i<70000; i++) {
+        const double lower_bound = -BOUND;
+        const double upper_bound = BOUND;
+        std::uniform_real_distribution<double> unif(lower_bound, upper_bound);
+
+        std::random_device rand_dev;          // Use random_device to get a random seed.
+
+        std::mt19937 rand_engine(rand_dev()); // mt19937 is a good pseudo-random number
+        // generator.
+
+        double x = unif(rand_engine);
+        std::cout << x << std::endl;
+        const double lower_bound1 = -BOUND;
+        const double upper_bound1 = BOUND;
+        std::uniform_real_distribution<double> unif1(lower_bound1, upper_bound1);
+
+        std::random_device rand_dev1;          // Use random_device to get a random seed.
+
+        std::mt19937 rand_engine1(rand_dev1()); // mt19937 is a good pseudo-random number
+        // generator.
+
+        double y = unif(rand_engine1);
+        std::cout << y << std::endl;
+        const double lower_bound2 = -BOUND;
+        const double upper_bound2 = BOUND;
+        std::uniform_real_distribution<double> unif2(lower_bound2, upper_bound2);
+
+        std::random_device rand_dev2;          // Use random_device to get a random seed.
+
+        std::mt19937 rand_engine2(rand_dev2()); // mt19937 is a good pseudo-random number
+        // generator.
+
+        double z = unif(rand_engine2);
+        std::cout << z << std::endl;
+        positions[i] = {
+                glm::vec3(x, y, z)
+        };
+    }
 
     unsigned int VBO, VAO;//, EBO;
     //Vertex buffer object - iz ram-a neke podatke ucitava na graficku karticu
@@ -412,20 +454,38 @@ int main() {
         // glm::vec3 lightColor = glm::vec3(0.0, (sin(glfwGetTime()) + 1.0) / 2.0, 0.0);
         // draw scene as normal
 
+        // draw house
+        modelShader.use();
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(1.0f, -2.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        modelShader.setMat4("model", model);
+        house.Draw(modelShader);
+
         modelShader.use();
 
-        // house TODO vratiti kucu i za pahulju uraditi sve sto treba, rotirati i staviti milion kako bi padale -probati
-        glm::mat4 model = glm::mat4(1.0f);
+        // nacrtati pahulje
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         modelShader.setMat4("view", view);
         modelShader.setMat4("projection", projection);
 
-        model = glm::translate(model, glm::vec3(1.0f, -2.0f, -4.0f));
-        model = glm::scale(model, glm::vec3(0.005f, 0.005f, 0.005f));
-        modelShader.setMat4("model", model);
+        for(int i=0; i<70000; i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, positions[i]);//glm::vec3(1.0f, 0.0f, 0.0f));
+            model = glm::scale(model, glm::vec3(0.0008f, 0.0008f, 0.0008f));
+            float angle = 20.0f*i;
+            model = glm::rotate(model, (float) glm::radians(85.0f), glm::vec3(-0.1, 0.0, 0.0));
+            if(i % 2 == 0) {
+                model = glm::rotate(model, (float) (glfwGetTime()*(-1.0)), glm::vec3(0.0, -0.3, 0.0));
+            }
+            else {
+                model = glm::rotate(model, (float) (glfwGetTime()), glm::vec3(0.0, -0.3, 0.0));
+            }
+            modelShader.setMat4("model", model);
+            snowflakes.Draw(modelShader);
+        }
 
-        house.Draw(modelShader);
 
         /*model = glm::mat4(1.0f);
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
