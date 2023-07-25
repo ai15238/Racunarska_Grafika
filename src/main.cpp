@@ -27,6 +27,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 unsigned int loadCubemap(vector<std::string> faces);
 unsigned int loadTexture(char const * path);
+void renderQuad();
 
 //sirina i visina prozora za renderovanje u pixelima
 const unsigned int SCR_WIDTH = 800;
@@ -46,9 +47,25 @@ float lastY = (float)SCR_HEIGHT / 2.0; // definisemo kao centar ekrana ovu posle
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-//lightning
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+// hdr i bloom
+bool hdr = true;
+bool hdrKeyPressed = false;
+bool bloom = true;
+bool bloomKeyPressed = false;
+float exposure = 1.0f;
 
+//lightning
+glm::vec3 lightPos(9.3f, 4.0f, -40.4f);
+struct PointLight {
+    glm::vec3 position;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+
+    float constant;
+    float linear;
+    float quadratic;
+};
 int main() {
     //inicijalizacija glfw biblioteke i konfiguracija
     glfwInit();
@@ -90,32 +107,44 @@ int main() {
 
     Shader shader("resources/shaders/cube.vs", "resources/shaders/cube.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
-    Shader modelShader("resources/shaders/model_loading.vs", "resources/shaders/model_loading.fs");
+    Shader modelShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
+    Shader bloomShader("resources/shaders/bloom.vs", "resources/shaders/bloom.fs");
+    Shader hdrShader("resources/shaders/hdr.vs", "resources/shaders/hdr.fs");
 
-    Shader lightShader("resources/shaders/colors.vs", "resources/shaders/colors.fs");
+    //Shader lightShader("resources/shaders/colors.vs", "resources/shaders/colors.fs");
     Shader lightCubeShader("resources/shaders/light_cube.vs", "resources/shaders/light_cube.fs");
 
-    Model snowflakes(FileSystem::getPath("resources/objects/snowflake/snowflake1.obj"));
-    Model house(FileSystem::getPath("resources/objects/farmhouse/farmhouse/farmhouse_obj.obj"));
+    //Model snowflakes(FileSystem::getPath("resources/objects/snowflake/snowflake1.obj"));
+    Model snesko(FileSystem::getPath("resources/objects/snowman/snowman.obj"), true);
+    Model island(FileSystem::getPath("resources/objects/island/island1.obj"), true);
+    Model svetlo(FileSystem::getPath("resources/objects/svetlo/streetlight.obj"), true);
+    Model island2(FileSystem::getPath("resources/objects/island/island2.obj"), true);
+    island.SetShaderTextureNamePrefix("material.");
+    snesko.SetShaderTextureNamePrefix("material.");
+    svetlo.SetShaderTextureNamePrefix("material.");
+    island2.SetShaderTextureNamePrefix("material.");
+    //Model sneg1(FileSystem::getPath("resources/objects/snow_model/terrain.obj"));
+    //sneg1.SetShaderTextureNamePrefix("material.");
+
+    Model drvo(FileSystem::getPath("resources/objects/island/tree.obj"), true);
+    drvo.SetShaderTextureNamePrefix("material.");
+
+    Model island3(FileSystem::getPath("resources/objects/island2/island1_design2_c4d.obj"), true);
+    island3.SetShaderTextureNamePrefix("material.");
+
+    Model kuca(FileSystem::getPath("resources/objects/house2/untitled.obj"), true);
+    kuca.SetShaderTextureNamePrefix("material.");
+
+    PointLight pointLight;
+    pointLight.position = glm::vec3(4.0f, 4.0f, 0.0);
+    pointLight.ambient = glm::vec3(0.15, 0.15, 0.15);
+    pointLight.diffuse = glm::vec3(1.5f,1.5f,1.1f);
+    pointLight.specular = glm::vec3(0.15, 0.15, 0.15);
+    pointLight.constant = 1.0f;
+    pointLight.linear = 0.13f;
+    pointLight.quadratic = 0.032f;
     //Model figure1(FileSystem::getPath("resources/objects/low_obj_15000/low_obj_15000.obj"));
-    //triangle
-    /*float vertices[] = {
-            0.5f, -0.5f, 0.0, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, //levo
-            -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,//desno
-            0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f //gore
-    };*/
-    //square
-    /*float vertices[] = {
-            // pozzicija                        //koordinate tektura
-            0.5f, 0.5f, 0.0f, 1.0f, 1.0f, //gore desno
-            0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // dole desno
-            -0.5, -0.5f, 0.0f, 0.0f, 0.0f, //dole levo
-            -0.5f, 0.5f, 0.0f, 0.0f, 1.0f // gore levo
-    };
-    unsigned int indices[] = {
-            0, 1, 3, // prvi trougao
-            1, 2, 3 // drugi trougao
-    };*/
+
     //crtamo kocku
     float cubeVertices[] = {
             // positions                      // texture Coords
@@ -306,7 +335,7 @@ int main() {
             -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
             -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f
     };
-    glm::vec3 positions[70000];
+    /*glm::vec3 positions[70000];
     for(int i=0; i<70000; i++) {
         const double lower_bound = -BOUND;
         const double upper_bound = BOUND;
@@ -345,6 +374,7 @@ int main() {
                 glm::vec3(x, y, z)
         };
     }
+    */
 
     unsigned int VBO, VAO;//, EBO;
     //Vertex buffer object - iz ram-a neke podatke ucitava na graficku karticu
@@ -412,25 +442,85 @@ int main() {
     //unsigned int cubeTexture = loadTexture(FileSystem::getPath("resources/textures/container.jpg").c_str());
     vector<std::string> faces
             {
-                    FileSystem::getPath("resources/textures/Park3/posx.jpg"),
-                    FileSystem::getPath("resources/textures/Park3/negx.jpg"),
-                    FileSystem::getPath("resources/textures/Park3/posy.jpg"),
-                    FileSystem::getPath("resources/textures/Park3/negy.jpg"),
-                    FileSystem::getPath("resources/textures/Park3/posz.jpg"),
-                    FileSystem::getPath("resources/textures/Park3/negz.jpg")
+                    FileSystem::getPath("resources/textures/interstellar_skybox/xpos.png"),
+                    FileSystem::getPath("resources/textures/interstellar_skybox/xneg.png"),
+                    FileSystem::getPath("resources/textures/interstellar_skybox/ypos.png"),
+                    FileSystem::getPath("resources/textures/interstellar_skybox/yneg.png"),
+                    FileSystem::getPath("resources/textures/interstellar_skybox/zpos.png"),
+                    FileSystem::getPath("resources/textures/interstellar_skybox/zneg.png")
             };
     unsigned int cubemapTexture = loadCubemap(faces);
 
     shader.use();
-    shader.setInt("texture1", 0);
+   // shader.setInt("texture1", 0);
     //shader.setInt("texture2", 1);
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+/*    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);*/
 
+
+    // bloom - izdvajanje bljestavih fragmenata (za ulicno svetlo)
+
+    unsigned int hdrFBO;
+    glGenFramebuffers(1, &hdrFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+
+    unsigned int colorBuffer[2]; // colorBuffer[0] = FragColor, [1] = BrightColor
+    glGenTextures(2, colorBuffer);
+    for (unsigned int i = 0; i < 2; i++) {
+        glBindTexture(GL_TEXTURE_2D, colorBuffer[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        // attach texture to framebuffer
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffer[i], 0);
+    }
+
+    unsigned int rboDepth;
+    glGenRenderbuffers(1, &rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+
+
+    // u color_attachment0 se nalazi cela scena u HDR-u, a u attachment1 - fragmenti intenz vece od neke zadate vrednosti
+    unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+    glDrawBuffers(2, attachments);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Framebuffer not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // ping-pong-framebuffer za blurovanje
+    unsigned int pingpongFBO[2];
+    unsigned int pingpongColorbuffers[2];
+    glGenFramebuffers(2, pingpongFBO);
+    glGenTextures(2, pingpongColorbuffers);
+    for (unsigned int i = 0; i < 2; i++)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+        glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorbuffers[i], 0);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "Framebuffer not complete!" << std::endl;
+    }
+
+    // aktiviranje shader-a
+    bloomShader.use();
+    bloomShader.setInt("image", 0);
+
+    hdrShader.use();
+    hdrShader.setInt("hdrBuffer", 0);
+    hdrShader.setInt("bloomBlur", 1);
     //camera.Position = glm::vec3(0,0,3);
     //camera.Front = glm::vec3(0,0,-1);
     //camera.Up = glm::vec3(0,1,0);
@@ -450,92 +540,159 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::vec3 lightColor = glm::vec3(1.0, 1.0, 1.0);
-        // glm::vec3 lightColor = glm::vec3(0.0, (sin(glfwGetTime()) + 1.0) / 2.0, 0.0);
+        //glm::vec3 lightColor = glm::vec3(1.0, 1.0, 1.0);
+         glm::vec3 lightColor = glm::vec3(0.0, (sin(glfwGetTime()) + 1.0) / 2.0, 0.0);
         // draw scene as normal
 
-        // draw house
-        modelShader.use();
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(1.0f, -2.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-        modelShader.setMat4("model", model);
-        house.Draw(modelShader);
-
+        //draw island
         modelShader.use();
 
-        // nacrtati pahulje
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        //Directional Lignt
+        modelShader.setVec3("dirLight.direction", -20.0f, -20.0f, 0.0f);
+        modelShader.setVec3("dirLight.ambient", 0.06, 0.06, 0.06);
+        modelShader.setVec3("dirLight.diffuse",  0.6f,0.2f,0.2);
+        modelShader.setVec3("dirLight.specular", 0.1, 0.1, 0.1);
+
+        // Pointlight's
+        //1
+        modelShader.setVec3("pointLight[0].position", glm::vec3(-1.05f,1.8f,1.7f));
+        modelShader.setVec3("pointLight[0].ambient", pointLight.ambient);
+        modelShader.setVec3("pointLight[0].diffuse", pointLight.diffuse);
+        modelShader.setVec3("pointLight[0].specular", pointLight.specular);
+        modelShader.setFloat("pointLight[0].constant", pointLight.constant);
+        modelShader.setFloat("pointLight[0].linear", pointLight.linear);
+        modelShader.setFloat("pointLight[0].quadratic", pointLight.quadratic);
+        //2
+        modelShader.setVec3("pointLight[1].position", glm::vec3(3.05f,1.8f,-4.7f));
+        modelShader.setVec3("pointLight[1].ambient", pointLight.ambient);
+        modelShader.setVec3("pointLight[1].diffuse", pointLight.diffuse);
+        modelShader.setVec3("pointLight[1].specular", pointLight.specular);
+        modelShader.setFloat("pointLight[1].constant", pointLight.constant);
+        modelShader.setFloat("pointLight[1].linear", pointLight.linear);
+        modelShader.setFloat("pointLight[1].quadratic", pointLight.quadratic);
+        //3
+        /*
+        modelShader.setVec3("pointLight[2].position", glm::vec3(-5.75f,(4.85f + sin(glfwGetTime())/6),8.95f));
+        modelShader.setVec3("pointLight[2].ambient", glm::vec3(0.15, 0.15, 0.15));
+        modelShader.setVec3("pointLight[2].diffuse", glm::vec3(1.5f,1.5f,1.1f));
+        modelShader.setVec3("pointLight[2].specular", glm::vec3(0.15, 0.15, 0.15));
+        modelShader.setFloat("pointLight[2].constant", 1.0f);
+        modelShader.setFloat("pointLight[2].linear", pointLight.linear);
+        modelShader.setFloat("pointLight[2].quadratic", pointLight.quadratic);
+        //4
+        modelShader.setVec3("pointLight[3].position", glm::vec3(7.7f,(-0.4f + sin(glfwGetTime())/6),8.75f));
+        modelShader.setVec3("pointLight[3].ambient", glm::vec3(0.15, 0.15, 0.15));
+        modelShader.setVec3("pointLight[3].diffuse", glm::vec3(1.5f,1.5f,1.1f));
+        modelShader.setVec3("pointLight[3].specular", glm::vec3(0.15, 0.15, 0.15));
+        modelShader.setFloat("pointLight[3].constant", 1.0f);
+        modelShader.setFloat("pointLight[3].linear", pointLight.linear);
+        modelShader.setFloat("pointLight[3].quadratic", pointLight.quadratic);*/
+
+        modelShader.setVec3("viewPosition", camera.Position);
+        modelShader.setFloat("material.shininess", 32.0f);
+
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
+                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        modelShader.setMat4("view", view);
         modelShader.setMat4("projection", projection);
-
-        for(int i=0; i<70000; i++) {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, positions[i]);//glm::vec3(1.0f, 0.0f, 0.0f));
-            model = glm::scale(model, glm::vec3(0.0008f, 0.0008f, 0.0008f));
-            float angle = 20.0f*i;
-            model = glm::rotate(model, (float) glm::radians(85.0f), glm::vec3(-0.1, 0.0, 0.0));
-            if(i % 2 == 0) {
-                model = glm::rotate(model, (float) (glfwGetTime()*(-1.0)), glm::vec3(0.0, -0.3, 0.0));
-            }
-            else {
-                model = glm::rotate(model, (float) (glfwGetTime()), glm::vec3(0.0, -0.3, 0.0));
-            }
-            modelShader.setMat4("model", model);
-            snowflakes.Draw(modelShader);
-        }
-
-
-        /*model = glm::mat4(1.0f);
-        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        view = camera.GetViewMatrix();
         modelShader.setMat4("view", view);
-        modelShader.setMat4("projection", projection);
-        model = glm::translate(model, glm::vec3(1.0f, -2.0f, -4.0f));
-        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-        model = glm::rotate(model, (float)glm::radians(85.0), glm::vec3(-0.1, 0.0, 0.0));
+
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        //postaviti ostrvo sa snegom
+        //glDisable(GL_CULL_FACE);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, -0.99f, -3.6f));
+        model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
         modelShader.setMat4("model", model);
-        modelShader.setVec3("lightColor", lightColor);
-        figure1.Draw(modelShader);*/
+        island.Draw(modelShader);
+        //glEnable(GL_CULL_FACE);
+        //Enabling back face culling
+   /*     glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);*/
 
-        //cube with texture
-        /*shader.use();
+        // postaviti svetlo
         model = glm::mat4(1.0f);
-        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        view = camera.GetViewMatrix();
-        shader.setMat4("view", view);
-        shader.setMat4("projection", projection);
-        model = glm::translate(model, glm::vec3(0.0f, 1.0f, 1.0f));
-        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-        shader.setMat4("model", model);
-        // cubes
-        glBindVertexArray(VAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, cubeTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);*/
+        model = glm::translate(model, glm::vec3(-1.2f, -0.95f, 1.4f));
+        model = glm::rotate(model, (float)90.0f, glm::vec3(0.0, 1.0, 0.0));
+        model = glm::scale(model, glm::vec3(1.2f, 1.0f, 1.2f));
+        modelShader.setMat4("model", model);
+        //modelShader.setVec3("lightColor", lightColor);
+        svetlo.Draw(modelShader);
 
-
-        //lightCube and coloredCube
-
-        lightShader.use();
-        lightShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-        lightShader.setVec3("lightColor", 1.0, 1.0, 1.0);
-        lightShader.setVec3("lightPos", lightPos);
-        lightShader.setVec3("viewPos", camera.Position);
-
-        projection = glm::perspective(glm::radians(camera.Zoom),(float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        view = camera.GetViewMatrix();
-        lightShader.setMat4("projection", projection);
-        lightShader.setMat4("view", view);
-        //world transformation:
         model = glm::mat4(1.0f);
-        lightShader.setMat4("model", model);
-        //render the cube
-        glBindVertexArray(cubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
+        model = glm::translate(model, glm::vec3(3.2f, -0.95f, -4.4f));
+        model = glm::rotate(model, (float)45.0f, glm::vec3(0.0, 1.0, 0.0));
+        model = glm::scale(model, glm::vec3(1.2f, 1.0f, 1.2f));
+        modelShader.setMat4("model", model);
+        //modelShader.setVec3("lightColor", lightColor);
+        svetlo.Draw(modelShader);
+
+        //postaviti sneska
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.2f, -0.35f, 1.2f));
+        model = glm::rotate(model, (float)10.0f, glm::vec3(0.0f, 0.3f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+        modelShader.setMat4("model", model);
+        //modelShader.setVec3("lightColor", lightColor);
+        snesko.Draw(modelShader);
+
+        //postaviti kucu
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-0.5, -0.73f, -1.4));
+        model = glm::rotate(model, (float)-90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.1, 0.2, 0.1));
+        modelShader.setMat4("model", model);
+        kuca.Draw(modelShader);
+
+        //postaviti ostrvo sa rekom
+
+        modelShader.use();
+        modelShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        modelShader.setVec3("lightColor", 1.0, 0.5, 0.2);
+        modelShader.setVec3("lightPos", lightPos);
+        modelShader.setVec3("viewPos", camera.Position);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(10.5f, -1.0f, -47.0f));
+        model = glm::rotate(model, (float)219.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.8f, 0.8f, 0.8f));
+        modelShader.setMat4("model", model);
+        island2.Draw(modelShader);
+
+        // drvo
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(7.3f, -1.1f, -45.4f));
+        model = glm::scale(model, glm::vec3(1.4f, 1.4f, 1.4f));
+        modelShader.setMat4("model", model);
+        drvo.Draw(modelShader);
+
+        //lampion
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(9.3f, -1.1f, -45.4f));
+        model = glm::scale(model, glm::vec3(1.4f, 1.4f, 1.4f));
+        modelShader.setMat4("model", model);
+        svetlo.Draw(modelShader);
+
+
+        glDisable(GL_CULL_FACE);
+        /*projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
+
+        modelShader.setMat4("view", view);
+        modelShader.setMat4("projection", projection);
+        modelShader.use();*/
+
+
+        //postaviti prolecno ostrvo
+        glm::mat4 modelIsland = glm::mat4(1.0f);
+        modelIsland = glm::translate(modelIsland, glm::vec3(6.7, 1.0, 23.9));
+        modelIsland = glm::scale(modelIsland, glm::vec3(0.06f));
+        //modelIsland = glm::rotate(modelIsland, glm::radians(45));
+        modelShader.setMat4("model", modelIsland);
+        island3.Draw(modelShader);
 
         //draw the lamp object
         lightCubeShader.use();
@@ -549,7 +706,9 @@ int main() {
         glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
        // glBindVertexArray(0);
-        // draw skybox as last
+
+
+       // skybox na kraju
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
@@ -562,6 +721,39 @@ int main() {
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        //*********************************************
+        //load pingpong
+        bool horizontal = true, first_iteration = true;
+        unsigned int amount = 10;
+        bloomShader.use();
+        for (unsigned int i = 0; i < amount; i++)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+            bloomShader.setInt("horizontal", horizontal);
+            glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffer[1] : pingpongColorbuffers[!horizontal]);
+
+            renderQuad();
+
+            horizontal = !horizontal;
+            if (first_iteration)
+                first_iteration = false;
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // **********************************************
+        // load hdr and bloom
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        hdrShader.use();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, colorBuffer[0]);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
+        hdrShader.setBool("hdr", hdr);
+        hdrShader.setBool("bloom", bloom);
+        hdrShader.setFloat("exposure", exposure);
+        renderQuad();
 
         /*update(window);
         //cistimo pozadinu prozora
@@ -675,6 +867,35 @@ int main() {
     return 0;
 }
 
+unsigned int quadVAO = 0;
+unsigned int quadVBO;
+void renderQuad()
+{
+    if (quadVAO == 0)
+    {
+        float quadVertices[] = {
+                // positions        // texture Coords
+                -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+                -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+                1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+                1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+}
+
 // f-ja koja postavlja dimenzije unutar prozora za renderovanja
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     //kad god se promeni dimenzija prozora, glViewPort se poziva da se promeni i velicina unutar prozora
@@ -710,6 +931,37 @@ void update(GLFWwindow* window) {
         camera.ProcessKeyboard(RIGHT, deltaTime);
         //kada uzimamo vektore pravaca. Kad god nam treba da uzimamo smerove neke pa da nadovezujemo
         // kada neki vektor treba da predstavlja neki pravac gledanja
+    if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS && !hdrKeyPressed)
+    {
+        hdr = !hdr;
+        hdrKeyPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_H) == GLFW_RELEASE)
+    {
+        hdrKeyPressed = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !bloomKeyPressed)
+    {
+        bloom = !bloom;
+        bloomKeyPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
+    {
+        bloomKeyPressed = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        if (exposure > 0.0f)
+            exposure -= 0.005f;
+        else
+            exposure = 0.0f;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        exposure += 0.005f;
+    }
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -827,3 +1079,88 @@ unsigned int loadTexture(char const * path)
 
     return textureID;
 }
+
+
+
+
+// nacrtati pahulje
+/*glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+glm::mat4 view = camera.GetViewMatrix();
+modelShader.setMat4("view", view);
+modelShader.setMat4("projection", projection);
+
+for(int i=0; i<70000; i++) {
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, positions[i]);//glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(0.0008f, 0.0008f, 0.0008f));
+    float angle = 20.0f*i;
+    model = glm::rotate(model, (float) glm::radians(85.0f), glm::vec3(-0.1, 0.0, 0.0));
+    if(i % 2 == 0) {
+        model = glm::rotate(model, (float) (glfwGetTime()*(-1.0)), glm::vec3(0.0, -0.3, 0.0));
+    }
+    else {
+        model = glm::rotate(model, (float) (glfwGetTime()), glm::vec3(0.0, -0.3, 0.0));
+    }
+    modelShader.setMat4("model", model);
+    snowflakes.Draw(modelShader);
+}
+*/
+
+/*model = glm::mat4(1.0f);
+projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+view = camera.GetViewMatrix();
+modelShader.setMat4("view", view);
+modelShader.setMat4("projection", projection);
+model = glm::translate(model, glm::vec3(1.0f, -2.0f, -4.0f));
+model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+model = glm::rotate(model, (float)glm::radians(85.0), glm::vec3(-0.1, 0.0, 0.0));
+modelShader.setMat4("model", model);
+modelShader.setVec3("lightColor", lightColor);
+figure1.Draw(modelShader);*/
+
+//cube with texture
+/*shader.use();
+model = glm::mat4(1.0f);
+projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+view = camera.GetViewMatrix();
+shader.setMat4("view", view);
+shader.setMat4("projection", projection);
+model = glm::translate(model, glm::vec3(0.0f, 1.0f, 1.0f));
+model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+shader.setMat4("model", model);
+// cubes
+glBindVertexArray(VAO);
+glActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, cubeTexture);
+glDrawArrays(GL_TRIANGLES, 0, 36);
+glBindVertexArray(0);*/
+
+/*pointLight.position = glm::vec3(4.0f * cos(currentFrame), 4.0f, 4.0*sin(currentFrame));
+modelShader.setVec3("pointLight.position", pointLight.position);
+modelShader.setVec3("pointLight.ambient", pointLight.ambient);
+modelShader.setVec3("pointLight.diffuse", pointLight.diffuse);
+modelShader.setVec3("pointLight.specular", pointLight.specular);
+modelShader.setFloat("pointLight.constant", pointLight.constant);
+modelShader.setFloat("pointLight.linear", pointLight.linear);
+modelShader.setFloat("pointLight.quadratic", pointLight.quadratic);*/
+
+
+// colored cube
+/*
+        lightShader.use();
+        lightShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        lightShader.setVec3("lightColor", 1.0, 0.5, 0.2);
+        lightShader.setVec3("lightPos", lightPos);
+        lightShader.setVec3("viewPos", camera.Position);
+
+        projection = glm::perspective(glm::radians(camera.Zoom),(float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
+        lightShader.setMat4("projection", projection);
+        lightShader.setMat4("view", view);
+        //world transformation:
+        model = glm::mat4(1.0f);
+        lightShader.setMat4("model", model);
+        //render the cube
+        glBindVertexArray(cubeVAO);
+        //glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);*/
