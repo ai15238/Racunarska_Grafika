@@ -56,6 +56,13 @@ float exposure = 1.0f;
 
 //lightning
 glm::vec3 lightPos(9.3f, 4.0f, -40.4f);
+
+struct DirLight {
+    glm::vec3 direction;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+};
 struct PointLight {
     glm::vec3 position;
     glm::vec3 ambient;
@@ -65,6 +72,20 @@ struct PointLight {
     float constant;
     float linear;
     float quadratic;
+};
+struct SpotLight {
+    glm::vec3 position;
+    glm::vec3 direction;
+    float cutOff;
+    float outerCutOff;
+
+    float constant;
+    float linear;
+    float quadratic;
+
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
 };
 int main() {
     //inicijalizacija glfw biblioteke i konfiguracija
@@ -123,6 +144,9 @@ int main() {
     snesko.SetShaderTextureNamePrefix("material.");
     svetlo.SetShaderTextureNamePrefix("material.");
     island2.SetShaderTextureNamePrefix("material.");
+
+    Model bench(FileSystem::getPath("resources/objects/ConcreteBench/ConcreteBench-L3.obj"), true);
+    bench.SetShaderTextureNamePrefix("material.");
     //Model sneg1(FileSystem::getPath("resources/objects/snow_model/terrain.obj"));
     //sneg1.SetShaderTextureNamePrefix("material.");
 
@@ -132,7 +156,7 @@ int main() {
     Model modelMoon("resources/objects/sun/13913_Sun_v2_l3.obj");
     modelMoon.SetShaderTextureNamePrefix("material.");
 
-    Model drvo(FileSystem::getPath("resources/objects/island/tree.obj"), true);
+    Model drvo(FileSystem::getPath("resources/objects/tree/tree.obj"), true);
     drvo.SetShaderTextureNamePrefix("material.");
 
     Model island3(FileSystem::getPath("resources/objects/island2/island1_design2_c4d.obj"), true);
@@ -141,15 +165,43 @@ int main() {
     Model kuca(FileSystem::getPath("resources/objects/house2/untitled.obj"), true);
     kuca.SetShaderTextureNamePrefix("material.");
 
+    DirLight dirLight;
+    dirLight.direction = glm::vec3(0.0, -0.5, 0.0);
+    dirLight.ambient = glm::vec3(0.05, 0.05, 0.05);
+    dirLight.diffuse = glm::vec3(0.1, 0.1, 0.1);
+    dirLight.specular = glm::vec3(0.1, 0.1, 0.1);
+
     PointLight pointLight;
     pointLight.position = glm::vec3(4.0f, 4.0f, 0.0);
     pointLight.ambient = glm::vec3(0.15, 0.15, 0.15);
-    pointLight.diffuse = glm::vec3(1.5f,1.5f,1.1f);
-    pointLight.specular = glm::vec3(0.15, 0.15, 0.15);
+    pointLight.diffuse = glm::vec3(0.6f,0.6f,0.6f);
+    pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
     pointLight.constant = 1.0f;
     pointLight.linear = 0.13f;
     pointLight.quadratic = 0.032f;
+
+    //spotlight lamp
+    SpotLight spotLight;
+    spotLight.position = glm::vec3(4.0f, 4.0, 0.0);
+    spotLight.ambient = glm::vec3(0.1, 0.1, 0.1);
+    spotLight.diffuse = glm::vec3(0.9f, 0.25f, 0.1f);
+    spotLight.specular = glm::vec3(1.0f, 1.0f, 1.0f);
+    spotLight.constant = 1.0f;
+    spotLight.linear = 0.09f;
+    spotLight.quadratic = 0.032f;
+    spotLight.cutOff = glm::cos(glm::radians(20.0f));
+    spotLight.outerCutOff = glm::cos(glm::radians(35.0f));
     //Model figure1(FileSystem::getPath("resources/objects/low_obj_15000/low_obj_15000.obj"));
+
+    //lamp
+    PointLight lampPointLight;
+    lampPointLight.position = glm::vec3(4.0f, 4.0, 0.0);
+    lampPointLight.ambient = glm::vec3(0.1, 0.1, 0.1);
+    lampPointLight.diffuse = glm::vec3(0.6, 0.6, 0.6);
+    lampPointLight.specular = glm::vec3(1.0, 1.0, 1.0);
+    lampPointLight.constant = 1.0f;
+    lampPointLight.linear = 0.09f;
+    lampPointLight.quadratic = 0.032f;
 
     //crtamo kocku
     float cubeVertices[] = {
@@ -402,7 +454,8 @@ int main() {
     Texture2D texture2("resources/textures/awesomeface.png", GL_REPEAT, GL_LINEAR, GL_RGBA);
 */
     //unsigned int cubeTexture = loadTexture(FileSystem::getPath("resources/textures/container.jpg").c_str());
-    vector<std::string> faces1
+    //svetliji skybox
+    vector<std::string> faces
             {
                     FileSystem::getPath("resources/textures/interstellar_skybox/xpos.png"),
                     FileSystem::getPath("resources/textures/interstellar_skybox/xneg.png"),
@@ -411,15 +464,19 @@ int main() {
                     FileSystem::getPath("resources/textures/interstellar_skybox/zpos.png"),
                     FileSystem::getPath("resources/textures/interstellar_skybox/zneg.png")
             };
-    vector<std::string> faces
+
+    // taman skybox
+    vector<std::string> faces1
             {
-                    FileSystem::getPath("resources/textures/galaxy/galaxy+X.tga"),
-                    FileSystem::getPath("resources/textures/galaxy/galaxy-X.tga"),
-                    FileSystem::getPath("resources/textures/galaxy/galaxy+Y.tga"),
-                    FileSystem::getPath("resources/textures/galaxy/galaxy-Y.tga"),
-                    FileSystem::getPath("resources/textures/galaxy/galaxy+Z.tga"),
-                    FileSystem::getPath("resources/textures/galaxy/galaxy-Z.tga")
+                    FileSystem::getPath("resources/textures/space/right.jpg").c_str(),
+                    FileSystem::getPath("resources/textures/space/left.jpg").c_str(),
+                    FileSystem::getPath("resources/textures/space/top.jpg").c_str(),
+                    FileSystem::getPath("resources/textures/space/bottom.jpg").c_str(),
+                    FileSystem::getPath("resources/textures/space/front.jpg").c_str(),
+                    FileSystem::getPath("resources/textures/space/back.jpg").c_str()
             };
+
+
     unsigned int cubemapTexture = loadCubemap(faces);
     unsigned int cubemapTexture1 = loadCubemap(faces1);
 
@@ -428,11 +485,41 @@ int main() {
     //shader.setInt("texture2", 1);
 
     skyboxShader.use();
-    skyboxShader.setInt("skybox", 0);
+    //skyboxShader.setInt("skybox", 0);
 
     //skyboxShader.use();
     skyboxShader.setInt("skybox1", 1);
 
+
+    //transparent window vertices
+    Shader windowShader("resources/shaders/transparentShader.vs", "resources/shaders/transparentShader.fs");
+    float windowVertices[] = {
+            4.0f, -0.4f,  4.0f,  1.0f, 0.0f,
+            -4.0f, -0.4f,  4.0f,  0.0f, 0.0f,
+            -4.0f, -0.4f, -4.0f,  0.0f, 1.0f,
+
+            4.0f, -0.4f,  4.0f,  1.0f, 0.0f,
+            -4.0f, -0.4f, -4.0f,  0.0f, 1.0f,
+            4.0f, -0.4f, -4.0f,  1.0f, 1.0f
+    };
+
+    unsigned int windowVAO, windowVBO;
+    glGenVertexArrays(1, &windowVAO);
+    glGenBuffers(1, &windowVBO);
+    glBindVertexArray(windowVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, windowVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(windowVertices), windowVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+
+
+    unsigned int windowTexture = loadTexture(FileSystem::getPath("resources/textures/window.png").c_str());
+
+    windowShader.use();
+    windowShader.setInt("diffTex", 0);
 
 /*    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);*/
@@ -501,6 +588,20 @@ int main() {
     //camera.Front = glm::vec3(0,0,-1);
     //camera.Up = glm::vec3(0,1,0);
 
+
+    float h = 0;
+    typedef struct{
+        glm::vec3 trans;
+        glm::vec3 skal;
+        glm::vec3 rotatV;
+        float rotatU;
+    }triD;
+    vector<triD>winPos(3);
+    winPos.push_back({glm::vec3(-0.5, (-0.73f+sin(glfwGetTime())/6), -1.4), glm::vec3(0.19f,0.25f,0.2f), glm::vec3(1.0, 0, 0) ,43.0f});
+    winPos.push_back({glm::vec3(-0.5, (-0.73f+sin(glfwGetTime())/6), -1.4), glm::vec3(0.19f,0.25f,0.2f), glm::vec3(1.0, 0, 0) ,43.0f});
+    winPos.push_back({glm::vec3(-0.5, (-0.73f+sin(glfwGetTime())/6), -1.4), glm::vec3(0.19f,0.25f,0.2f), glm::vec3(1.0, 0, 0) ,43.0f});
+
+
     // petlja za renderovanje
     while (!glfwWindowShouldClose(window)) {
 
@@ -518,18 +619,19 @@ int main() {
 
         //glm::vec3 lightColor = glm::vec3(1.0, 1.0, 1.0);
          glm::vec3 lightColor = glm::vec3(0.0, (sin(glfwGetTime()) + 1.0) / 2.0, 0.0);
-        // draw scene as normal
+
+         // draw scene as normal
+        glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //draw island
         modelShader.use();
 
-        glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //Directional Lignt
         modelShader.setVec3("dirLight.direction", -20.0f, -20.0f, 0.0f);
         modelShader.setVec3("dirLight.ambient", 0.06, 0.06, 0.06);
-        modelShader.setVec3("dirLight.diffuse",  0.6f,0.2f,0.2);
+        modelShader.setVec3("dirLight.diffuse",  0.6f,0.6f,0.6);
         modelShader.setVec3("dirLight.specular", 0.1, 0.1, 0.1);
 
         // Pointlight's
@@ -549,26 +651,31 @@ int main() {
         modelShader.setFloat("pointLight[1].constant", pointLight.constant);
         modelShader.setFloat("pointLight[1].linear", pointLight.linear);
         modelShader.setFloat("pointLight[1].quadratic", pointLight.quadratic);
-        //3
-        /*
-        modelShader.setVec3("pointLight[2].position", glm::vec3(-5.75f,(4.85f + sin(glfwGetTime())/6),8.95f));
-        modelShader.setVec3("pointLight[2].ambient", glm::vec3(0.15, 0.15, 0.15));
-        modelShader.setVec3("pointLight[2].diffuse", glm::vec3(1.5f,1.5f,1.1f));
-        modelShader.setVec3("pointLight[2].specular", glm::vec3(0.15, 0.15, 0.15));
-        modelShader.setFloat("pointLight[2].constant", 1.0f);
-        modelShader.setFloat("pointLight[2].linear", pointLight.linear);
-        modelShader.setFloat("pointLight[2].quadratic", pointLight.quadratic);
-        //4
-        modelShader.setVec3("pointLight[3].position", glm::vec3(7.7f,(-0.4f + sin(glfwGetTime())/6),8.75f));
-        modelShader.setVec3("pointLight[3].ambient", glm::vec3(0.15, 0.15, 0.15));
-        modelShader.setVec3("pointLight[3].diffuse", glm::vec3(1.5f,1.5f,1.1f));
-        modelShader.setVec3("pointLight[3].specular", glm::vec3(0.15, 0.15, 0.15));
-        modelShader.setFloat("pointLight[3].constant", 1.0f);
-        modelShader.setFloat("pointLight[3].linear", pointLight.linear);
-        modelShader.setFloat("pointLight[3].quadratic", pointLight.quadratic);*/
 
+        //spot light
+        modelShader.setVec3("spotLight[0].direction", glm::vec3(0.0f,-1.0f,0.0f));
+        modelShader.setVec3("spotLight[0].position", glm::vec3(3.05f,(1.8f+sin(glfwGetTime())/6),-4.7f));
+        modelShader.setVec3("spotLight[0].ambient", spotLight.ambient);
+        modelShader.setVec3("spotLight[0].diffuse", glm::vec3(0.85f, 0.25f, 0.0f));
+        modelShader.setVec3("spotLight[0].specular", spotLight.specular);
+        modelShader.setFloat("spotLight[0].constant", spotLight.constant);
+        modelShader.setFloat("spotLight[0].linear", spotLight.linear);
+        modelShader.setFloat("spotLight[0].quadratic", spotLight.quadratic);
+        modelShader.setFloat("spotLight[0].cutOff", spotLight.cutOff);
+        modelShader.setFloat("spotLight[0].outerCutOff", spotLight.outerCutOff);
         modelShader.setVec3("viewPosition", camera.Position);
         modelShader.setFloat("material.shininess", 32.0f);
+
+        modelShader.setVec3("spotLight[1].direction", glm::vec3(0.0f,-1.0f,0.0f));
+        modelShader.setVec3("spotLight[1].position", glm::vec3(-1.05f,(1.8f+sin(glfwGetTime())/6),1.7f));
+        modelShader.setVec3("spotLight[1].ambient", spotLight.ambient);
+        modelShader.setVec3("spotLight[1].diffuse", glm::vec3(0.85f, 0.25f, 0.0f));
+        modelShader.setVec3("spotLight[1].specular", spotLight.specular);
+        modelShader.setFloat("spotLight[1].constant", spotLight.constant);
+        modelShader.setFloat("spotLight[1].linear", spotLight.linear);
+        modelShader.setFloat("spotLight[1].quadratic", spotLight.quadratic);
+        modelShader.setFloat("spotLight[1].cutOff", spotLight.cutOff);
+        modelShader.setFloat("spotLight[1].outerCutOff", spotLight.outerCutOff);
 
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
@@ -620,9 +727,16 @@ int main() {
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-0.5, (-0.73f+sin(glfwGetTime())/6), -1.4));
         model = glm::rotate(model, (float)-90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.1, 0.2, 0.1));
+        model = glm::scale(model, glm::vec3(0.08));
         modelShader.setMat4("model", model);
         kuca.Draw(modelShader);
+
+        // drvo
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.4f, (-0.95f+sin(glfwGetTime())/6), -4.9f));
+        model = glm::scale(model, glm::vec3(0.008f, 0.008f, 0.008f));
+        modelShader.setMat4("model", model);
+        drvo.Draw(modelShader);
 
 
         modelShader.setVec3("pointLight[2].position", glm::vec3());
@@ -710,12 +824,6 @@ int main() {
         modelMoon.Draw(blendingShader);
 
         //TODO - kasnije translirati
-        // drvo
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(7.3f, -1.1f, -45.4f));
-        model = glm::scale(model, glm::vec3(1.4f, 1.4f, 1.4f));
-        modelShader.setMat4("model", model);
-        drvo.Draw(modelShader);
 
         //lampion
         model = glm::mat4(1.0f);
@@ -723,6 +831,15 @@ int main() {
         model = glm::scale(model, glm::vec3(1.4f, 1.4f, 1.4f));
         modelShader.setMat4("model", model);
         svetlo.Draw(modelShader);
+
+        // klupa
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(15.5, 0.5, 20.2));
+        model = glm::scale(model, glm::vec3(0.02f, 0.02f, 0.02f));
+        model = glm::rotate(model, glm::radians((float) -90.0), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians((float) -20.0), glm::vec3(0.0f, 0.0f, 1.0f));
+        modelShader.setMat4("model", model);
+        bench.Draw(modelShader);
         
         /*projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
@@ -758,20 +875,20 @@ int main() {
        // skybox na kraju
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
-        skyboxShader.setFloat("p", sin(glfwGetTime()/2.0+0.5));
+        //skyboxShader.setFloat("p", sin(glfwGetTime()/4.0+0.5));
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
         skyboxShader.setMat4("view", view);
         skyboxShader.setMat4("projection", projection);
         // skybox cube
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture1);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
 
 
-        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        /*glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
         //skyboxShader.setFloat("p", sin(glfwGetTime()/2.0+0.5));
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
@@ -782,8 +899,49 @@ int main() {
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture1);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
-        glDepthFunc(GL_LESS); // set depth function back to default
+        glDepthFunc(GL_LESS); // set depth function back to default*/
 
+        std::sort(winPos.begin(), winPos.end(), [](triD a, triD b){
+            float d1 = glm::distance(a.trans, camera.Position);
+            float d2 = glm::distance(b.trans, camera.Position);
+            return d1 > d2;
+        });
+
+        //this goes before window implementation
+        glDisable(GL_CULL_FACE);
+        windowShader.use();
+        glBindVertexArray(windowVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, windowTexture);
+
+        windowShader.setMat4("view", view);
+        windowShader.setMat4("projection", projection);
+
+        for(int i = 0 ;i < winPos.size(); i++){
+
+            model = glm::mat4(1.0f);
+
+            model = glm::translate(model, winPos[i].trans);
+            model = glm::scale(model, winPos[i].skal);
+            model = glm::rotate(model, glm::radians(winPos[i].rotatU), winPos[i].rotatV);
+
+            /*if(glm::vec3(3.0f,2.7f,1.0f) == winPos[i].trans){
+                model = glm::rotate(model, glm::radians(winPos[i].rotatU), glm::vec3(1.0f,0.0f,0.0f));
+            }*/
+
+            windowShader.setMat4("model", model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        }
+
+        /*model = glm::rotate(model, glm::radians(-43.0f), glm::vec3(1.0, 0, 0));
+        model = glm::translate(model, glm::vec3(0.03f,2.87f,13.91f));
+        model = glm::rotate(model, glm::radians(43.0f), glm::vec3(1.0, 0, 0));
+        windowShader.setMat4("model", model);*/
+
+        //this goes after window implementation
+        glEnable(GL_CULL_FACE);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

@@ -9,5 +9,5 @@ uniform samplerCube skybox1;
 uniform float p;
 
 void main() {
-    FragColor = mix(texture(skybox, TexCoords),texture(skybox1, TexCoords), 0.001);
+    FragColor = texture(skybox, TexCoords);
 }
