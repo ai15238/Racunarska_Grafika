@@ -195,7 +195,7 @@ int main() {
     lampPointLight.quadratic = 0.032f;
 
     //crtamo kocku
-    /*float cubeVertices[] = {
+    float cubeVertices[] = {
             // positions                      // texture Coords
             -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
             0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
@@ -238,7 +238,7 @@ int main() {
             0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
             -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
             -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
-    };*/
+    };
     float skyboxVertices[] = {
             // positions
             -1.0f, 1.0f, -1.0f,
