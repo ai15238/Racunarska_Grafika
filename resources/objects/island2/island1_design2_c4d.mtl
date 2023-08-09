@@ -1,5 +1,0 @@
-newmtl islandmtl
-
-d 1.0
-illum 2
-map_Kd textureSurface_Color_2.jpg
