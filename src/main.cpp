@@ -653,14 +653,14 @@ int main() {
         //glEnable(GL_CULL_FACE);
         //Enabling back face culling
 
-        /*// postaviti svetlo
+        // postaviti svetlo
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.2f, (-0.95f+sin(glfwGetTime())/6), 1.4f));
         model = glm::rotate(model, (float)90.0f, glm::vec3(0.0, 1.0, 0.0));
         model = glm::scale(model, glm::vec3(1.2f, 1.0f, 1.2f));
         modelShader.setMat4("model", model);
         svetlo.Draw(modelShader);
-
+/*
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(3.2f, (-0.95f+sin(glfwGetTime())/6), -4.4f));
         model = glm::rotate(model, (float)45.0f, glm::vec3(0.0, 1.0, 0.0));
