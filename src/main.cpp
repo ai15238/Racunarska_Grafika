@@ -55,7 +55,7 @@ bool bloomKeyPressed = false;
 float exposure = 1.0f;
 
 //lightning
-glm::vec3 lightPos(0.0f, 2.0f, -4.4f);
+glm::vec3 lightPos(0.0f, 0.7f, -4.4f);
 
 struct DirLight {
     glm::vec3 direction;
@@ -126,15 +126,26 @@ int main() {
 
     glEnable(GL_DEPTH_TEST); //objekti koji su na sceni treba uvek da budu ispred skybox-a
 
+    // configure global opengl state
+    // -----------------------------
+    //glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+
+    //enable frag blending and setup blending function:
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     Shader shader("resources/shaders/cube.vs", "resources/shaders/cube.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
     Shader modelShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader bloomShader("resources/shaders/bloom.vs", "resources/shaders/bloom.fs");
     Shader hdrShader("resources/shaders/hdr.vs", "resources/shaders/hdr.fs");
-    Shader lightCubeShader("resources/shaders/light_cube.vs", "resources/shaders/light_cube.fs");
+    // Shader lightCubeShader("resources/shaders/light_cube.vs", "resources/shaders/light_cube.fs");
     Shader lightBallShader("resources/shaders/lightBallShader.vs", "resources/shaders/lightBallShader.fs");
     //Shader lightShader("resources/shaders/colors.vs", "resources/shaders/colors.fs");
-
+    Shader simpleDepthShader("resources/shaders/shadow_mapping_depth.vs", "resources/shaders/shadow_mapping_depth.fs");
+    Shader debugDepthQuad("resources/shaders/debug_quad.vs", "resources/shaders/debug_quad_depth.fs");
     Model island(FileSystem::getPath("resources/objects/island/island1.obj"), true);
     island.SetShaderTextureNamePrefix("material.");
 
@@ -401,6 +412,8 @@ int main() {
     // da imam novi lightCubeVBO onda  bi trebalo za stride da se postavi 3*sizeof(flaot)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) nullptr);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) (3*sizeof(float)));
+    glEnableVertexAttribArray(0);
 
     /*Texture2D texture("resources/textures/container.jpg", GL_REPEAT, GL_LINEAR, GL_RGB);
     Texture2D texture2("resources/textures/awesomeface.png", GL_REPEAT, GL_LINEAR, GL_RGBA);
@@ -511,6 +524,9 @@ int main() {
     //camera.Front = glm::vec3(0,0,-1);
     //camera.Up = glm::vec3(0,1,0);
 
+
+ 
+
     // petlja za renderovanje
     while (!glfwWindowShouldClose(window)) {
 
@@ -526,24 +542,25 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+
         //glm::vec3 lightColor = glm::vec3(1.0, 1.0, 1.0);
          glm::vec3 lightColor = glm::vec3(0.0, 1.0, 0.0);
 
          // draw scene as normal
         glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        modelShader.use();
+        /*modelShader.use();
 
         //Directional Light
         modelShader.setVec3("dirLight.direction", -20.0f, -20.0f, -20.0f);
         modelShader.setVec3("dirLight.ambient", 0.06, 0.06, 0.06);
         modelShader.setVec3("dirLight.diffuse",  0.6f,0.6f,0.6);
-        modelShader.setVec3("dirLight.specular", 0.1, 0.1, 0.1);
+        modelShader.setVec3("dirLight.specular", 0.1, 0.1, 0.1);*/
 
         // Pointlight's
         //1
-        modelShader.setVec3("pointLight[0].position", glm::vec3(-1.05f,(1.8f+sin(glfwGetTime())/6),1.7f));
+  /*      modelShader.setVec3("pointLight[0].position", glm::vec3(-1.05f,(1.8f+sin(glfwGetTime())/6),1.7f));
         modelShader.setVec3("pointLight[0].ambient", pointLight.ambient);
         modelShader.setVec3("pointLight[0].diffuse", pointLight.diffuse);
         modelShader.setVec3("pointLight[0].specular", pointLight.specular);
@@ -559,7 +576,7 @@ int main() {
         modelShader.setFloat("pointLight[1].linear", pointLight.linear);
         modelShader.setFloat("pointLight[1].quadratic", pointLight.quadratic);
 
-        //spot light*/
+        //spot light
         modelShader.setVec3("spotLight[0].direction", glm::vec3(0.0f,-1.0f,0.0f));
         modelShader.setVec3("spotLight[0].position", glm::vec3(3.05f,(1.8f+sin(glfwGetTime())/6),-4.7f));
         modelShader.setVec3("spotLight[0].ambient", spotLight.ambient);
@@ -581,16 +598,16 @@ int main() {
         modelShader.setFloat("spotLight[1].quadratic", spotLight.quadratic);
         modelShader.setFloat("spotLight[1].cutOff", spotLight.cutOff);
         modelShader.setFloat("spotLight[1].outerCutOff", spotLight.outerCutOff);
+*/
 
+        /*modelShader.setVec3("viewPosition", camera.Position);
+        modelShader.setFloat("material.shininess", 32.0f);*/
 
-        modelShader.setVec3("viewPosition", camera.Position);
-        modelShader.setFloat("material.shininess", 32.0f);
-
+        //modelShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        modelShader.setMat4("projection", projection);
-        modelShader.setMat4("view", view);
+
 
 
         lightBallShader.use();
@@ -600,7 +617,7 @@ int main() {
         lightBallShader.setVec3("dirLight.diffuse", dirLight.diffuse);
         lightBallShader.setVec3("dirLight.specular", dirLight.specular);
 
-        lightBallShader.setVec3("pointLight.position", 0.0f+sin(currentFrame/2)*2.1f*cos(currentFrame/2)*2.3,1.0f-cos(currentFrame/2)*0.2f+sin(currentFrame/2)*1.3*cos(currentFrame/2),-3.6+sin(currentFrame/2)*1.3+cos(currentFrame/2)*1.6f);
+        lightBallShader.setVec3("pointLight.position", 2.0f * cos(currentFrame/3)-0.3, 1.2f-sin(currentFrame/3)*1.1+cos(currentFrame/3)*0.1, 4.0f * sin(currentFrame/3) - 2.5f);
         lightBallShader.setVec3("pointLight.ambient", pointLight.ambient);
         lightBallShader.setVec3("pointLight.diffuse", pointLight.diffuse);
         lightBallShader.setVec3("pointLight.specular", pointLight.specular);
@@ -608,7 +625,8 @@ int main() {
         lightBallShader.setFloat("pointLight.linear", pointLight.linear);
         lightBallShader.setFloat("pointLight.quadratic", pointLight.quadratic);
 
-        lightBallShader.setVec3("spotLight[0].position", 0.0f+sin(currentFrame/2)*2.1f*cos(currentFrame/2)*2.3,1.0f-cos(currentFrame/2)*0.2f+sin(currentFrame/2)*1.3*cos(currentFrame/2),-3.6+sin(currentFrame/2)*1.3+cos(currentFrame/2)*1.6f);
+        //lightBallShader.setVec3("spotLight[0].position", 0.0f+sin(currentFrame/2)*2.1f*cos(currentFrame/2)*2.3,1.0f-cos(currentFrame/2)*0.2f+sin(currentFrame/2)*1.3*cos(currentFrame/2),-3.6+sin(currentFrame/2)*1.3+cos(currentFrame/2)*1.6f);
+        lightBallShader.setVec3("spotLight[0].position", 2.0f * cos(currentFrame/3)-0.3, 1.2f-sin(currentFrame/3)*1.1+cos(currentFrame/3)*0.1, 4.0f * sin(currentFrame/3) - 2.5f);
         lightBallShader.setVec3("spotLight[0].direction", spotLight.direction);
         lightBallShader.setVec3("spotLight[0].ambient", spotLight.ambient);
         lightBallShader.setVec3("spotLight[0].diffuse", spotLight.diffuse);
@@ -623,19 +641,19 @@ int main() {
         lightBallShader.setVec3("viewPosition", camera.Position);
         lightBallShader.setMat4("projection", projection);
         lightBallShader.setMat4("view", view);
-        glEnable(GL_CULL_FACE);
+        //glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         //postaviti ostrvo
-        //glDisable(GL_CULL_FACE);
+        glDisable(GL_CULL_FACE);
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, (-0.99f+sin(glfwGetTime())/6), -3.6f));
         model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
-        modelShader.setMat4("model", model);
-        island.Draw(modelShader);
+        lightBallShader.setMat4("model", model);
+        island.Draw(lightBallShader);
         //glEnable(GL_CULL_FACE);
         //Enabling back face culling
 
-        // postaviti svetlo
+        /*// postaviti svetlo
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.2f, (-0.95f+sin(glfwGetTime())/6), 1.4f));
         model = glm::rotate(model, (float)90.0f, glm::vec3(0.0, 1.0, 0.0));
@@ -648,23 +666,23 @@ int main() {
         model = glm::rotate(model, (float)45.0f, glm::vec3(0.0, 1.0, 0.0));
         model = glm::scale(model, glm::vec3(1.2f, 1.0f, 1.2f));
         modelShader.setMat4("model", model);
-        svetlo.Draw(modelShader);
+        svetlo.Draw(modelShader);*/
 
         //postaviti sneska
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-1.5f, (-0.45f+sin(glfwGetTime())/6), -0.3f));
         model = glm::rotate(model, (float)-12.0f, glm::vec3(0.0f, 0.3f, 0.0f));
         model = glm::scale(model, glm::vec3(0.26f));
-        modelShader.setMat4("model", model);
-        snesko.Draw(modelShader);
+        lightBallShader.setMat4("model", model);
+        snesko.Draw(lightBallShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.1, (-0.74f+sin(glfwGetTime())/6), -1.0));
         model = glm::scale(model, glm::vec3(0.0099f));
         model = glm::rotate(model, glm::radians((float)-20.0), glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::rotate(model, glm::radians((float)-90.0), glm::vec3(1.0f, 0.0f, 0.0f));
-        modelShader.setMat4("model", model);
-        bench.Draw(modelShader);
+        lightBallShader.setMat4("model", model);
+        bench.Draw(lightBallShader);
 
         // drvo
         model = glm::mat4(1.0f);
@@ -672,34 +690,38 @@ int main() {
         model = glm::scale(model, glm::vec3(0.008f, 0.008f, 0.008f));
         model = glm::rotate(model, (float)-10.0f, glm::vec3(0.0, 1.0, 0.0));
 
-        modelShader.setMat4("model", model);
-        drvo.Draw(modelShader);
+        lightBallShader.setMat4("model", model);
+        drvo.Draw(lightBallShader);
 
         //render lightBallShader
         glm::mat4 lightBallModel = glm::mat4(1.0f);
 
-        //// TODO postaviti da oscilira malo vise da se krece preko celog ostrva
         //lightBallModel = glm::translate(lightBallModel, glm::vec3(0.0f+sin(currentFrame/2)*6.6f, -1.0f+cos(currentFrame/2)*3.2f, -3.6f+cos(currentFrame/2)*4.6f));
-        lightBallModel = glm::translate(lightBallModel, glm::vec3(0.0f+sin(currentFrame/2)*2.1f*cos(currentFrame/2)*2.3,1.0f-cos(currentFrame/2)*0.2f+sin(currentFrame/2)*1.3*cos(currentFrame/2),-3.6+sin(currentFrame/2)*1.3+cos(currentFrame/2)*1.6f));
+        //lightBallModel = glm::translate(lightBallModel, glm::vec3(0.0f+sin(currentFrame/2)*2.1f*cos(currentFrame/2)*2.3,1.0f-cos(currentFrame/2)*0.2f+sin(currentFrame/2)*1.3*cos(currentFrame/2),-3.6+sin(currentFrame/2)*1.3+cos(currentFrame/2)*1.6f));
+        lightBallModel = glm::translate(lightBallModel, glm::vec3(2.0f * cos(currentFrame/3)-0.3, 1.2f-sin(currentFrame/3)*1.1+cos(currentFrame/3)*0.1, 4.0f * sin(currentFrame/3) - 2.5f));
         lightBallModel = glm::scale(lightBallModel, glm::vec3(0.0001f));
         lightBallModel = glm::rotate(lightBallModel, sin(currentFrame), glm::vec3(0.3f,0.1f,1.0f));
         lightBallModel = glm::translate(lightBallModel, glm::vec3(0.0f));
-        modelShader.setMat4("model", lightBallModel);
-        modelLightBall.Draw(modelShader);
+        lightBallShader.setMat4("model", lightBallModel);
+        modelLightBall.Draw(lightBallShader);
 
 
         //draw the lamp object
-        lightCubeShader.use();
+       /* lightCubeShader.use();
+        glBindVertexArray(lightCubeVAO);
+
         lightCubeShader.setMat4("projection", projection);
         lightCubeShader.setMat4("view", view);
         model = glm::mat4(1.0f);
         model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f));
+        model = glm::scale(model, glm::vec3(0.15f));
         lightCubeShader.setMat4("model", model);
         lightCubeShader.setVec3("lightColor", lightColor);
-        glBindVertexArray(lightCubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        glDrawArrays(GL_TRIANGLES, 0, 36);*/
        // glBindVertexArray(0);
+
+       //modelShader.use();
 
 
        // skybox na kraju
@@ -717,25 +739,6 @@ int main() {
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
 
-
-        /*glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-        skyboxShader.use();
-        //skyboxShader.setFloat("p", sin(glfwGetTime()/2.0+0.5));
-        view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
-        skyboxShader.setMat4("view", view);
-        skyboxShader.setMat4("projection", projection);
-        glBindVertexArray(skyboxVAO);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture1);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-        glDepthFunc(GL_LESS); // set depth function back to default*/
-
-
-        /*model = glm::rotate(model, glm::radians(-43.0f), glm::vec3(1.0, 0, 0));
-        model = glm::translate(model, glm::vec3(0.03f,2.87f,13.91f));
-        model = glm::rotate(model, glm::radians(43.0f), glm::vec3(1.0, 0, 0));
-        windowShader.setMat4("model", model);*/
 
         //this goes after window implementation
         glEnable(GL_CULL_FACE);
@@ -773,100 +776,6 @@ int main() {
         hdrShader.setFloat("exposure", exposure);
         renderQuad();
 
-        /*update(window);
-        //cistimo pozadinu prozora
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glm::mat4 view = glm::mat4(1.0f);
-        glm::mat4 projection = glm::mat4(1.0f);
-        //view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f + sin(glfwGetTime())));//da se kamera krece + sin...
-
-        view = camera.GetViewMatrix();
-        projection = glm::perspective(glm::radians(camera.Zoom), (float) SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
-
-        //dry skybox first
-        glDepthMask(GL_FALSE);
-        glDepthFunc(GL_LEQUAL);
-        skyboxShader.use();
-        view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
-        skyboxShader.setMat4("view", view);
-        skyboxShader.setMat4("projection", projection);
-        glBindVertexArray(skyboxVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glDepthFunc(GL_LESS);
-        glDepthMask(GL_TRUE);
-
-        // bind Texture
-        //glBindTexture(GL_TEXTURE_2D, texture);
-        texture.active(GL_TEXTURE0);
-        texture.bind();
-
-        texture2.active(GL_TEXTURE1);
-        texture2.bind();
-
-        //transformacije - napravimo ih na procesoru, a onda matricu koju smo kreirali posaljemo a graficku karticu
-        //scaliranje (da bude 2x manji) pa transliranje
-        *//*glm::mat4 m = glm::mat4(1.0f); // I
-        //skaliranje -> rotacija -> translacija
-        m = glm::translate(m, position); //glm::vec3(0.6, -0.5, 0.0)); // I * T
-        m = glm::rotate(m, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f)); //(I * T) * R
-        m = glm::scale(m, glm::vec3(0.2, 0.2, 1.0)); // (I * T * R) * S
-*//*        // I*T*R*S*x <=> T(R(S(x)))
-        //model matricu koju smo definisali u vertex shader-u posaljemo na graficku
-        //int locationId = glGetUniformLocation(shader.m_Id, "model");
-        //glUniformMatrix4fv(locationId, 1, GL_FALSE, glm::value_ptr(m)); // &m[0][0]
-
-        //koordinatni sistem - hocemo da napravimo da kvadrat bude zakrivljen
-        // objekat da bi se prikazao prolazi kroz 4 transformacije
-        // model matrica postavi objekat u svet
-        // view matrica transformise koordinate da izgledaju onako kako su iz ugla kamere
-        // matrica projekcije ih redukuje do -1,1
-        // viewport transformacija transformise u koordinate na ekranu
-
-        unsigned int modelLocation = glGetUniformLocation(shader.m_Id, "model");
-        unsigned int viewLocation = glGetUniformLocation(shader.m_Id, "view");
-
-        //da se vrtimo u krug a da uvek gledamo u koord pocetak
-        //glm::mat4 view = glm::mat4(1.0f);
-        *//*float radius = 7;
-        float camX = sin(glfwGetTime()) * radius; // kamera koja kruzi oko scene i uvek gleda u kood poc
-        float camZ = cos(glfwGetTime()) * radius;
-        view = glm::lookAt(glm::vec3(camX,0,camZ), glm::vec3(0,0,0), glm::vec3(0, 1, 0));
-*//*
-
-        // pravimo kameru da moze da se pomera po prostoru sa WASD
-        //scena se ne menja, jedino kamera
-        //cameraPos dodajemo na Front da ne bi gledalo u istu tacku kada pomeramo levo desno
-        //view = glm::lookAt(cameraPos, cameraFront + cameraPos, cameraUp);
-
-        //glUniformMatrix4fv(modelLocation, 1, GL_FALSE, &model[0][0]);
-        glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
-        shader.setMat4("projection", projection); //drugi nacin da se postavi
-        //draw triangle
-        shader.use();
-        //shader.setUniform4f("gColor", sin(glfwGetTime())/2.0+0.5, 0.0, 0.0, 1.0);
-        //update(window);
-        //shader.setFloat("p", sin(glfwGetTime())/2 + 0.5);
-
-        glBindVertexArray(VAO);
-
-        for(int i=0; i<2; i++) {
-            glm::mat4 model = glm::mat4(1.0f);
-
-            // model matrica postavlja objekat u svet kako on treba da stoji
-            // hocemo da zarotiramo po x-osi
-            float angle = 20.0f * i;
-            model = glm::translate(model, cubePositions[i]);
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.5f, 1.0f, 0.0f));
-            shader.setMat4("model", model);
-            //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        }
-        glBindVertexArray(0);*/
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
