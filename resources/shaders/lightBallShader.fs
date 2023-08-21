@@ -42,7 +42,7 @@ struct SpotLight {
     float quadratic;
 };
 
-#define NR_SPOT_LIGHTS 2
+#define NR_SPOT_LIGHTS 1
 
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
