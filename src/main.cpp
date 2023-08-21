@@ -143,7 +143,6 @@ int main() {
     Shader hdrShader("resources/shaders/hdr.vs", "resources/shaders/hdr.fs");
     Shader lightCubeShader("resources/shaders/light_cube.vs", "resources/shaders/light_cube.fs");
     Shader lightBallShader("resources/shaders/lightBallShader.vs", "resources/shaders/lightBallShader.fs");
-    //Shader lightShader("resources/shaders/colors.vs", "resources/shaders/colors.fs");
 
     Model island(FileSystem::getPath("resources/objects/island/island1.obj"), true);
     island.SetShaderTextureNamePrefix("material.");
@@ -395,7 +394,6 @@ int main() {
     /*Texture2D texture("resources/textures/container.jpg", GL_REPEAT, GL_LINEAR, GL_RGB);
     Texture2D texture2("resources/textures/awesomeface.png", GL_REPEAT, GL_LINEAR, GL_RGBA);
 */
-    unsigned int cubeTexture = loadTexture(FileSystem::getPath("resources/textures/window.png").c_str());
 
     shader.use();
     shader.setInt("skybox", 0);
