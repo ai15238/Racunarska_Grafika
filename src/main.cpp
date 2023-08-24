@@ -143,6 +143,7 @@ int main() {
     Shader hdrShader("resources/shaders/hdr.vs", "resources/shaders/hdr.fs");
     Shader lightCubeShader("resources/shaders/light_cube.vs", "resources/shaders/light_cube.fs");
     Shader lightBallShader("resources/shaders/lightBallShader.vs", "resources/shaders/lightBallShader.fs");
+    Shader objectShader("resources/shaders/model_loading.vs","resources/shaders/model_loading.fs");
 
     Model island(FileSystem::getPath("resources/objects/island/island1.obj"), true);
     island.SetShaderTextureNamePrefix("material.");
@@ -162,8 +163,8 @@ int main() {
     Model drvo(FileSystem::getPath("resources/objects/tree/tree.obj"), true);
     drvo.SetShaderTextureNamePrefix("material.");
 
-   /* Model kuca(FileSystem::getPath("resources/objects/house2/untitled.obj"), true);
-    kuca.SetShaderTextureNamePrefix("material.");*/
+    /* Model kuca(FileSystem::getPath("resources/objects/house2/untitled.obj"), true);
+     kuca.SetShaderTextureNamePrefix("material.");*/
 
     DirLight dirLight;
     dirLight.direction = glm::vec3(0.0, -0.5, 0.0);
@@ -484,7 +485,7 @@ int main() {
     //camera.Front = glm::vec3(0,0,-1);
     //camera.Up = glm::vec3(0,1,0);
 
- 
+
 
     // petlja za renderovanje
     while (!glfwWindowShouldClose(window)) {
@@ -504,9 +505,9 @@ int main() {
 
 
         //glm::vec3 lightColor = glm::vec3(1.0, 1.0, 1.0);
-         glm::vec3 lightColor = glm::vec3(0.0, 1.0, 0.0);
+        glm::vec3 lightColor = glm::vec3(0.0, 1.0, 0.0);
 
-         // draw scene as normal
+        // draw scene as normal
         glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -546,50 +547,6 @@ int main() {
         lightBallShader.setFloat("spotLight[0].outerCutOff", spotLight.outerCutOff);
 
 
-        //glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
-        //postaviti ostrvo
-        glDisable(GL_CULL_FACE);
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, (-0.99f+sin(glfwGetTime())/6), -3.6f));
-        model = glm::scale(model, glm::vec3(0.6f));
-        lightBallShader.setMat4("model", model);
-        island.Draw(lightBallShader);
-        glEnable(GL_CULL_FACE);
-        //Enabling back face culling
-       /* model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.2f, (-0.95f+sin(glfwGetTime())/6), 1.4f));
-        model = glm::scale(model, glm::vec3(1.2f, 1.0f, 1.2f));
-        model = glm::rotate(model, (float)90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-        lightBallShader.setMat4("projection", projection);
-        svetlo.Draw(lightBallShader);*/
-        //glEnable(GL_CULL_FACE);
-
-
-        //postaviti sneska
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.5f, (-0.45f+sin(glfwGetTime())/6), -0.3f));
-        model = glm::rotate(model, (float)-12.0f, glm::vec3(0.0f, 0.3f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.26f));
-        lightBallShader.setMat4("model", model);
-        snesko.Draw(lightBallShader);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.1, (-0.74f+sin(glfwGetTime())/6), -1.0));
-        model = glm::scale(model, glm::vec3(0.0099f));
-        model = glm::rotate(model, glm::radians((float)-20.0), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, glm::radians((float)-90.0), glm::vec3(1.0f, 0.0f, 0.0f));
-        lightBallShader.setMat4("model", model);
-        bench.Draw(lightBallShader);
-
-        // drvo
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(2.4f, (-0.95f+sin(glfwGetTime())/6), -4.9f));
-        model = glm::scale(model, glm::vec3(0.008f, 0.008f, 0.008f));
-        model = glm::rotate(model, (float)-10.0f, glm::vec3(0.0, 1.0, 0.0));
-        lightBallShader.setMat4("model", model);
-        drvo.Draw(lightBallShader);
-
         //render lightBallShader
         glm::mat4 lightBallModel = glm::mat4(1.0f);
         lightBallModel = glm::translate(lightBallModel, glm::vec3(2.0f * cos(currentFrame/3)-0.3, 1.2f-sin(currentFrame/3)*1.1+cos(currentFrame/3)*0.1, 4.0f * sin(currentFrame/3) - 2.5f));
@@ -600,22 +557,92 @@ int main() {
         modelLightBall.Draw(lightBallShader);
 
 
-        //draw the lamp object
-       /* lightCubeShader.use();
-        glBindVertexArray(lightCubeVAO);
+        objectShader.use();
 
-        lightCubeShader.setMat4("projection", projection);
-        lightCubeShader.setMat4("view", view);
+        objectShader.setVec3("viewPosition", camera.Position);
+        objectShader.setFloat("material.shininess", 32.0f);
+        objectShader.setMat4("projection", projection);
+        objectShader.setMat4("view", view);
+
+        objectShader.setVec3("dirLight.direction", glm::vec3(-20.0, -20.0, 0.0));
+        objectShader.setVec3("dirLight.ambient", dirLight.ambient);
+        objectShader.setVec3("dirLight.diffuse", dirLight.diffuse);
+        objectShader.setVec3("dirLight.specular", dirLight.specular);
+
+        objectShader.setVec3("pointLight.position", 2.0f * cos(currentFrame/3)-0.3, 1.2f-sin(currentFrame/3)*1.1+cos(currentFrame/3)*0.1, 4.0f * sin(currentFrame/3) - 2.5f);
+        objectShader.setVec3("pointLight.ambient", pointLight.ambient);
+        objectShader.setVec3("pointLight.diffuse", pointLight.diffuse);
+        objectShader.setVec3("pointLight.specular", pointLight.specular);
+        objectShader.setFloat("pointLight.constant", pointLight.constant);
+        objectShader.setFloat("pointLight.linear", pointLight.linear);
+        objectShader.setFloat("pointLight.quadratic", pointLight.quadratic);
+
+        //lightBallShader.setVec3("spotLight[0].position", 0.0f+sin(currentFrame/2)*2.1f*cos(currentFrame/2)*2.3,1.0f-cos(currentFrame/2)*0.2f+sin(currentFrame/2)*1.3*cos(currentFrame/2),-3.6+sin(currentFrame/2)*1.3+cos(currentFrame/2)*1.6f);
+        objectShader.setVec3("spotLight[0].position", 2.0f * cos(currentFrame/3)-0.3, 1.2f-sin(currentFrame/3)*1.1+cos(currentFrame/3)*0.1, 4.0f * sin(currentFrame/3) - 2.5f);
+        objectShader.setVec3("spotLight[0].direction", spotLight.direction);
+        objectShader.setVec3("spotLight[0].ambient", spotLight.ambient);
+        objectShader.setVec3("spotLight[0].diffuse", spotLight.diffuse);
+        objectShader.setVec3("spotLight[0].specular", spotLight.specular);
+        objectShader.setFloat("spotLight[0].constant", spotLight.constant);
+        objectShader.setFloat("spotLight[0].linear", spotLight.linear);
+        objectShader.setFloat("spotLight[0].quadratic", spotLight.quadratic);
+        objectShader.setFloat("spotLight[0].cutOff", spotLight.cutOff);
+        objectShader.setFloat("spotLight[0].outerCutOff", spotLight.outerCutOff);
+
+        //glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        //postaviti ostrvo
+        glDisable(GL_CULL_FACE);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, (-0.99f+sin(glfwGetTime())/6), -3.6f));
+        model = glm::scale(model, glm::vec3(0.6f));
+        objectShader.setMat4("model", model);
+        island.Draw(objectShader);
+        glEnable(GL_CULL_FACE);
+
+
+        //postaviti sneska
         model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.15f));
-        lightCubeShader.setMat4("model", model);
-        lightCubeShader.setVec3("lightColor", lightColor);
+        model = glm::translate(model, glm::vec3(-1.5f, (-0.45f+sin(glfwGetTime())/6), -0.3f));
+        model = glm::rotate(model, (float)-12.0f, glm::vec3(0.0f, 0.3f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.26f));
+        objectShader.setMat4("model", model);
+        snesko.Draw(objectShader);
 
-        glDrawArrays(GL_TRIANGLES, 0, 36);*/
-       // glBindVertexArray(0);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.1, (-0.74f+sin(glfwGetTime())/6), -1.0));
+        model = glm::scale(model, glm::vec3(0.0099f));
+        model = glm::rotate(model, glm::radians((float)-20.0), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians((float)-90.0), glm::vec3(1.0f, 0.0f, 0.0f));
+        objectShader.setMat4("model", model);
+        bench.Draw(objectShader);
 
-  //      modelShader.use();
+        // drvo
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(2.4f, (-0.95f+sin(glfwGetTime())/6), -4.9f));
+        model = glm::scale(model, glm::vec3(0.008f, 0.008f, 0.008f));
+        model = glm::rotate(model, (float)-10.0f, glm::vec3(0.0, 1.0, 0.0));
+        objectShader.setMat4("model", model);
+        drvo.Draw(objectShader);
+
+
+
+        //draw the lamp object
+        /* lightCubeShader.use();
+         glBindVertexArray(lightCubeVAO);
+
+         lightCubeShader.setMat4("projection", projection);
+         lightCubeShader.setMat4("view", view);
+         model = glm::mat4(1.0f);
+         model = glm::translate(model, lightPos);
+         model = glm::scale(model, glm::vec3(0.15f));
+         lightCubeShader.setMat4("model", model);
+         lightCubeShader.setVec3("lightColor", lightColor);
+
+         glDrawArrays(GL_TRIANGLES, 0, 36);*/
+        // glBindVertexArray(0);
+
+        //      modelShader.use();
 /*        projection = glm::perspective(glm::radians(camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();*/
@@ -643,7 +670,7 @@ int main() {
         modelShader.setFloat("pointLight.quadratic", pointLight.quadratic);
         //2
 /*        modelShader.setVec3("pointLight[1].position", glm::vec3(3.05f,(1.8f+sin(glfwGetTime())/6),-4.7f));
-        
+
 */
         modelShader.setVec3("spotLight.position", glm::vec3(3.5f,(1.9f+sin(glfwGetTime())/6),-4.4f));
         modelShader.setVec3("spotLight.direction", glm::vec3(0.0f, -1.0f, 0.0f));
@@ -668,7 +695,7 @@ int main() {
         model = glm::rotate(model, (float)-45.0f, glm::vec3(0.0, 1.0, 0.0));
         modelShader.setMat4("model", model);
         svetlo.Draw(modelShader);
-       // glDisable(GL_CULL_FACE);
+        // glDisable(GL_CULL_FACE);
         // postaviti svetlo
 
         //glEnable(GL_CULL_FACE);
@@ -692,8 +719,8 @@ int main() {
 
         // skybox na kraju
 
-       glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-       skyboxShader.use();
+        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        skyboxShader.use();
         //skyboxShader.setFloat("p", sin(glfwGetTime()/4.0+0.5));
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
         skyboxShader.setMat4("view", view);
@@ -840,8 +867,8 @@ void update(GLFWwindow* window) {
         //position.x += 0.04;
         //cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed; //udesno, normalizujemo vektore
         camera.ProcessKeyboard(RIGHT, deltaTime);
-        //kada uzimamo vektore pravaca. Kad god nam treba da uzimamo smerove neke pa da nadovezujemo
-        // kada neki vektor treba da predstavlja neki pravac gledanja
+    //kada uzimamo vektore pravaca. Kad god nam treba da uzimamo smerove neke pa da nadovezujemo
+    // kada neki vektor treba da predstavlja neki pravac gledanja
     if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS && !hdrKeyPressed)
     {
         hdr = !hdr;
@@ -1015,62 +1042,3 @@ for(int i=0; i<70000; i++) {
     snowflakes.Draw(modelShader);
 }
 */
-
-/*model = glm::mat4(1.0f);
-projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-view = camera.GetViewMatrix();
-modelShader.setMat4("view", view);
-modelShader.setMat4("projection", projection);
-model = glm::translate(model, glm::vec3(1.0f, -2.0f, -4.0f));
-model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-model = glm::rotate(model, (float)glm::radians(85.0), glm::vec3(-0.1, 0.0, 0.0));
-modelShader.setMat4("model", model);
-modelShader.setVec3("lightColor", lightColor);
-figure1.Draw(modelShader);*/
-
-//cube with texture
-/*shader.use();
-model = glm::mat4(1.0f);
-projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-view = camera.GetViewMatrix();
-shader.setMat4("view", view);
-shader.setMat4("projection", projection);
-model = glm::translate(model, glm::vec3(0.0f, 1.0f, 1.0f));
-model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-shader.setMat4("model", model);
-// cubes
-glBindVertexArray(VAO);
-glActiveTexture(GL_TEXTURE0);
-glBindTexture(GL_TEXTURE_2D, cubeTexture);
-glDrawArrays(GL_TRIANGLES, 0, 36);
-glBindVertexArray(0);*/
-
-/*pointLight.position = glm::vec3(4.0f * cos(currentFrame), 4.0f, 4.0*sin(currentFrame));
-modelShader.setVec3("pointLight.position", pointLight.position);
-modelShader.setVec3("pointLight.ambient", pointLight.ambient);
-modelShader.setVec3("pointLight.diffuse", pointLight.diffuse);
-modelShader.setVec3("pointLight.specular", pointLight.specular);
-modelShader.setFloat("pointLight.constant", pointLight.constant);
-modelShader.setFloat("pointLight.linear", pointLight.linear);
-modelShader.setFloat("pointLight.quadratic", pointLight.quadratic);*/
-
-
-// colored cube
-/*
-        lightShader.use();
-        lightShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-        lightShader.setVec3("lightColor", 1.0, 0.5, 0.2);
-        lightShader.setVec3("lightPos", lightPos);
-        lightShader.setVec3("viewPos", camera.Position);
-
-        projection = glm::perspective(glm::radians(camera.Zoom),(float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        view = camera.GetViewMatrix();
-        lightShader.setMat4("projection", projection);
-        lightShader.setMat4("view", view);
-        //world transformation:
-        model = glm::mat4(1.0f);
-        lightShader.setMat4("model", model);
-        //render the cube
-        glBindVertexArray(cubeVAO);
-        //glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);*/

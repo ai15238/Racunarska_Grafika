@@ -13,10 +13,10 @@
 #include <rg/Error.h>
 #include <common.h>
 #include <glm/glm.hpp>
-class Shader {
+class Shader1 {
 public:
     unsigned int m_Id;
-    Shader(std::string vertexShaderPath, std::string fragmentShaderPath) {
+    Shader1(std::string vertexShaderPath, std::string fragmentShaderPath) {
         //appendShaderFolderIfNotPresent(vertexShaderPath);
         //appendShaderFolderIfNotPresent(fragmentShaderPath);
         // build and compile our shader program

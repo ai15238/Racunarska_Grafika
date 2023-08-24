@@ -25,7 +25,7 @@ public:
         loadModel(path);
     }
 
-    void Draw(Shader& shader) {
+    void Draw(Shader1& shader) {
         for (Mesh& mesh : meshes) {
             mesh.Draw(shader);
         }

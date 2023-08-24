@@ -11,7 +11,7 @@
 #include <assimp/postprocess.h>
 
 #include "learnopengl/mesh.h"
-#include "rg/Shader.h"
+#include "learnopengl/shader.h"
 
 #include <string>
 #include <fstream>
