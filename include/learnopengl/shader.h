@@ -10,13 +10,13 @@
 #include <iostream>
 #include <common.h>
 
-class Shader
+class Shader1
 {
 public:
     unsigned int ID;
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
-    Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr)
+    Shader1(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr)
     {
         std::string vertexPathString(vertexPath);
         std::string fragmentPathString(fragmentPath);

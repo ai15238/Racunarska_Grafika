@@ -10,9 +10,9 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <learnopengl/filesystem.h>
-#include <learnopengl/shader.h>
-#include <learnopengl/camera.h>
-#include <learnopengl/model.h>
+#include <rg/Shader.h>
+#include <rg/Camera.h>
+#include <rg/model.h>
 #include "rg/Texture2D.h"
 
 #include <iostream>
@@ -25,7 +25,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-unsigned int loadCubemap(vector<std::string> faces);
+unsigned int loadCubemap(std::vector<std::string> faces);
 unsigned int loadTexture(char const * path);
 void renderQuad();
 
@@ -114,7 +114,7 @@ int main() {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     //bolja alternativa funkciji update; jednom se izvrsava
-    //glfwSetKeyCallback(window, key_callback);
+    glfwSetKeyCallback(window, key_callback);
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -395,7 +395,7 @@ int main() {
    /* shader.use();
     shader.setInt("skybox", 0);*/
     //skybox
-    vector<std::string> faces
+    std::vector<std::string> faces
             {
                     FileSystem::getPath("resources/textures/space/right.jpg").c_str(),
                     FileSystem::getPath("resources/textures/space/left.jpg").c_str(),
@@ -499,7 +499,9 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
+        float lx = 2.0f * cos(currentFrame/3)-0.3;
+        float ly = 1.2f-sin(currentFrame/3)*1.4+cos(currentFrame/3)*0.3;
+        float lz = 4.0f * sin(currentFrame/3) - 2.1f;
 
         //glm::vec3 lightColor = glm::vec3(1.0, 1.0, 1.0);
         glm::vec3 lightColor = glm::vec3(0.0, 1.0, 0.0);
@@ -523,7 +525,7 @@ int main() {
         lightBallShader.setVec3("dirLight.diffuse", dirLight.diffuse);
         lightBallShader.setVec3("dirLight.specular", dirLight.specular);
 
-        lightBallShader.setVec3("pointLight[0].position", 2.0f * cos(currentFrame/3)-0.3, 1.2f-sin(currentFrame/3)*1.1+cos(currentFrame/3)*0.1, 4.0f * sin(currentFrame/3) - 2.5f);
+        lightBallShader.setVec3("pointLight[0].position", lx, ly, lz);
         lightBallShader.setVec3("pointLight[0].ambient", pointLight.ambient);
         lightBallShader.setVec3("pointLight[0].diffuse", pointLight.diffuse);
         lightBallShader.setVec3("pointLight[0].specular", pointLight.specular);
@@ -532,7 +534,7 @@ int main() {
         lightBallShader.setFloat("pointLight[0].quadratic", pointLight.quadratic);
 
         //lightBallShader.setVec3("spotLight[0].position", 0.0f+sin(currentFrame/2)*2.1f*cos(currentFrame/2)*2.3,1.0f-cos(currentFrame/2)*0.2f+sin(currentFrame/2)*1.3*cos(currentFrame/2),-3.6+sin(currentFrame/2)*1.3+cos(currentFrame/2)*1.6f);
-        lightBallShader.setVec3("spotLight[0].position", 2.0f * cos(currentFrame/3)-0.3, 1.2f-sin(currentFrame/3)*1.1+cos(currentFrame/3)*0.1, 4.0f * sin(currentFrame/3) - 2.5f);
+        lightBallShader.setVec3("spotLight[0].position", lx, ly, lz);
         lightBallShader.setVec3("spotLight[0].direction", spotLight.direction);
         lightBallShader.setVec3("spotLight[0].ambient", spotLight.ambient);
         lightBallShader.setVec3("spotLight[0].diffuse", spotLight.diffuse);
@@ -546,9 +548,9 @@ int main() {
 
         //render lightBallShader
         glm::mat4 lightBallModel = glm::mat4(1.0f);
-        lightBallModel = glm::translate(lightBallModel, glm::vec3(2.0f * cos(currentFrame/3)-0.3, 1.2f-sin(currentFrame/3)*1.1+cos(currentFrame/3)*0.1, 4.0f * sin(currentFrame/3) - 2.5f));
+        lightBallModel = glm::translate(lightBallModel, glm::vec3(lx, ly, lz));
         lightBallModel = glm::scale(lightBallModel, glm::vec3(0.0001f));
-        lightBallModel = glm::rotate(lightBallModel, sin(currentFrame), glm::vec3(0.3f,0.1f,1.0f));
+        lightBallModel = glm::rotate(lightBallModel, (float)sin(currentFrame), glm::vec3(0.3f,0.1f,1.0f));
         lightBallModel = glm::translate(lightBallModel, glm::vec3(0.0f));
         lightBallShader.setMat4("model", lightBallModel);
         modelLightBall.Draw(lightBallShader);
@@ -561,13 +563,13 @@ int main() {
         objectShader.setMat4("view", view);
 
         /// TODO  - SREDITI OVAJ DIR LIGHT, bio na je -20, -20, 0
-        objectShader.setVec3("dirLight.direction", glm::vec3(-0.2, -2.0, -0.3));
+        objectShader.setVec3("dirLight.direction", glm::vec3(-20.0, -20.0, 0.0));
         objectShader.setVec3("dirLight.ambient", glm::vec3(0.0f));
-        objectShader.setVec3("dirLight.diffuse", glm::vec3(0.01));
-        objectShader.setVec3("dirLight.specular", glm::vec3(0.01f));
+        objectShader.setVec3("dirLight.diffuse", glm::vec3(0.0));
+        objectShader.setVec3("dirLight.specular", glm::vec3(0.0f));
 
-        objectShader.setVec3("pointLight[0].position", 2.0f * cos(currentFrame/3)-0.3, 1.2f-sin(currentFrame/3)*1.1+cos(currentFrame/3)*0.1, 4.0f * sin(currentFrame/3) - 2.5f);
-        objectShader.setVec3("pointLight[0].ambient", pointLight.ambient);
+        objectShader.setVec3("pointLight[0].position", lx, ly, lz);
+        objectShader.setVec3("pointLight[0].ambient", glm::vec3(0.0f));
         objectShader.setVec3("pointLight[0].diffuse", glm::vec3(0.1));
         objectShader.setVec3("pointLight[0].specular", pointLight.specular);
         objectShader.setFloat("pointLight[0].constant", pointLight.constant);
@@ -575,7 +577,7 @@ int main() {
         objectShader.setFloat("pointLight[0].quadratic", pointLight.quadratic);
 
         //lightBallShader.setVec3("spotLight[0].position", 0.0f+sin(currentFrame/2)*2.1f*cos(currentFrame/2)*2.3,1.0f-cos(currentFrame/2)*0.2f+sin(currentFrame/2)*1.3*cos(currentFrame/2),-3.6+sin(currentFrame/2)*1.3+cos(currentFrame/2)*1.6f);
-        /*objectShader.setVec3("spotLight[0].position", 2.0f * cos(currentFrame/3)-0.3, 1.2f-sin(currentFrame/3)*1.1+cos(currentFrame/3)*0.1, 4.0f * sin(currentFrame/3) - 2.5f);
+        /*objectShader.setVec3("spotLight[0].position", lx, ly, lz);
         objectShader.setVec3("spotLight[0].direction", spotLight.direction);
         objectShader.setVec3("spotLight[0].ambient", spotLight.ambient);
         objectShader.setVec3("spotLight[0].diffuse", spotLight.diffuse);
@@ -618,12 +620,17 @@ int main() {
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(2.4f, (-0.95f+sin(glfwGetTime())/6), -4.9f));
         model = glm::scale(model, glm::vec3(0.008f, 0.008f, 0.008f));
-        model = glm::rotate(model, (float)-10.0f, glm::vec3(0.0, 1.0, 0.0));
+        model = glm::rotate(model, glm::radians((float)-30.0f), glm::vec3(0.0, 1.0, 0.0));
         objectShader.setMat4("model", model);
         drvo.Draw(objectShader);
 
-
-
+/*
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(20.9, -5.0, 3.0f));
+        model = glm::scale(model, glm::vec3(0.09));
+        model = glm::rotate(model, glm::radians((float)-180.0f), glm::vec3(0.0, 0.0, 1.0));
+        objectShader.setMat4("model", model);
+        teren.Draw(objectShader);*/
         //draw the lamp object
         /* lightCubeShader.use();
          glBindVertexArray(lightCubeVAO);
@@ -694,7 +701,7 @@ int main() {
         // glDisable(GL_CULL_FACE);
         // postaviti svetlo
 
-        objectShader.setVec3("spotLight[0].position", glm::vec3(3.2f,1.9f,-4.4f));
+        objectShader.setVec3("spotLight[0].position", glm::vec3(3.2f,(1.9f+sin(glfwGetTime())/6),-4.4f));
         objectShader.setVec3("spotLight[0].direction", spotLight.direction);
         objectShader.setVec3("spotLight[0].ambient", spotLight.ambient);
         objectShader.setVec3("spotLight[0].diffuse", spotLight.diffuse);
@@ -704,8 +711,14 @@ int main() {
         objectShader.setFloat("spotLight[0].quadratic", spotLight.quadratic);
         objectShader.setFloat("spotLight[0].cutOff", spotLight.cutOff);
         objectShader.setFloat("spotLight[0].outerCutOff", spotLight.outerCutOff);
-
-        lightBallShader.use();
+        /*objectShader.setVec3("pointLight[0].position", 3.2f,(1.9f+sin(glfwGetTime())/6),-4.4f);
+        objectShader.setVec3("pointLight[0].ambient", pointLight.ambient);
+        objectShader.setVec3("pointLight[0].diffuse", glm::vec3(0.6));
+        objectShader.setVec3("pointLight[0].specular", pointLight.specular);
+        objectShader.setFloat("pointLight[0].constant", pointLight.constant);
+        objectShader.setFloat("pointLight[0].linear", pointLight.linear);
+        objectShader.setFloat("pointLight[0].quadratic", pointLight.quadratic);*/
+        //lightBallShader.use();
 
         //glEnable(GL_CULL_FACE);
         /*shader.use();
@@ -879,6 +892,14 @@ void update(GLFWwindow* window) {
         camera.ProcessKeyboard(RIGHT, deltaTime);
     //kada uzimamo vektore pravaca. Kad god nam treba da uzimamo smerove neke pa da nadovezujemo
     // kada neki vektor treba da predstavlja neki pravac gledanja
+
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+
     if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS && !hdrKeyPressed)
     {
         hdr = !hdr;
@@ -902,19 +923,13 @@ void update(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
     {
         if (exposure > 0.0f)
-            exposure -= 0.005f;
+            exposure -= 0.5f;
         else
             exposure = 0.0f;
     }
     else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
     {
-        exposure += 0.005f;
-    }
-}
-
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
+        exposure += 0.5f;
     }
 }
 
@@ -952,7 +967,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 // +Z (front)
 // -Z (back)
 // -------------------------------------------------------
-unsigned int loadCubemap(vector<std::string> faces) {
+unsigned int loadCubemap(std::vector<std::string> faces) {
 
     unsigned int textureID;
     glGenTextures(1, &textureID);
