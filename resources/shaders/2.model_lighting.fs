@@ -128,7 +128,7 @@ void main()
     vec3 normal = normalize(Normal);
     vec3 viewDir = normalize(viewPosition - FragPos);
     vec3 result = CalcDirLight(dirLight, normal, viewDir);
-    result += CalcPointLight(pointLights, normal, FragPos, viewDir);
+    //vec3 result = CalcPointLight(pointLights, normal, FragPos, viewDir);
     result += CalcSpotLight(spotLight, normal, FragPos, viewDir);
     vec4 texColor = texture(material.texture_diffuse1, TexCoords);
     float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722));
