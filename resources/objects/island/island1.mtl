@@ -5,14 +5,14 @@ newmtl Island
 Ns 225.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
-Ks 0.500000 0.500000 0.500000
+Ks 1.00000 0.00000 0.00000
 Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd everytexture.com-stock-nature-snow-00002-diffuse-1024.jpg
-map_Ka everytexture.com-stock-nature-snow-00002-diffuse-1024.jpg
-map_Ks everytexture.com-stock-nature-snow-00002-normal-1024.jpg
+map_Kd everytexture.com-nature-snow-00020-diffuse-1024.jpg
+map_Ka everytexture.com-nature-snow-00020-diffuse-1024.jpg
+map_Bump everytexture.com-nature-snow-00020-bump-1024.jpg
 
 newmtl Water
 Ns 323.999994
