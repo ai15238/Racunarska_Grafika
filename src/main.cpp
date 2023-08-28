@@ -655,6 +655,8 @@ int main() {
         objectShader.setMat4("model", model);
         svetlo.Draw(objectShader);
 /*
+ * komentar
+ */
 
         //draw the lamp object
         /* lightCubeShader.use();
