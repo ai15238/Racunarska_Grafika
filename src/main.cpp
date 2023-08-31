@@ -30,8 +30,8 @@ unsigned int loadTexture(char const * path);
 void renderQuad();
 
 //sirina i visina prozora za renderovanje u pixelima
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1200;
+const unsigned int SCR_HEIGHT = 1000;
 
 const float BOUND = 100;
 glm::vec3 position;
@@ -130,7 +130,7 @@ int main() {
     // -----------------------------
     //glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
+    glCullFace(GL_BACK);
 
     //enable frag blending and setup blending function:
     glEnable(GL_BLEND);
@@ -179,8 +179,8 @@ int main() {
     pointLight.diffuse = glm::vec3(0.6f,0.6f,0.6f);
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
     pointLight.constant = 1.0f;
-    pointLight.linear = 0.13f;
-    pointLight.quadratic = 0.032f;
+    pointLight.linear = 0.05f;
+    pointLight.quadratic = 0.001f;
 
     //spotlight lamp
     SpotLight spotLight;
@@ -188,12 +188,12 @@ int main() {
     spotLight.direction = glm::vec3(0.0f, -3.0f, 0.0f);
     spotLight.ambient = glm::vec3(0.1, 0.1, 0.1);
     spotLight.diffuse = glm::vec3(0.9f, 0.25f, 0.1f);
-    spotLight.specular = glm::vec3(0.5f, 1.0f, 0.0f);
+    spotLight.specular = glm::vec3(0.0f, 0.0f, 0.0f);
     spotLight.constant = 1.0f;
     spotLight.linear = 0.05f;
     spotLight.quadratic = 0.001f;
-    spotLight.cutOff = glm::cos(glm::radians(30.0f));
-    spotLight.outerCutOff = glm::cos(glm::radians(50.0f));
+    spotLight.cutOff = glm::cos(glm::radians(100.0f));
+    spotLight.outerCutOff = glm::cos(glm::radians(150.0f));
     //Model figure1(FileSystem::getPath("resources/objects/low_obj_15000/low_obj_15000.obj"));
 
     //crtamo kocku
@@ -286,50 +286,6 @@ int main() {
             1.0f, -1.0f, 1.0f
     };
 
-    float lightCubeVertices[] = {
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-            0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-            0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-            0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-            -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-
-            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-            0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-            0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-            0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-            -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-
-            -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
-            -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-            -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
-            -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
-
-            0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
-            0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-            0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-            0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-            0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
-            0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
-
-            -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
-            0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
-            0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
-            0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
-            -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
-
-            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-            0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-            0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-            0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-            -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f
-    };
-
     unsigned int VBO, VAO;//, EBO;
     //Vertex buffer object - iz ram-a neke podatke ucitava na graficku karticu
 
@@ -365,50 +321,16 @@ int main() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) nullptr);
 
-
-    unsigned int  cubeVBO, cubeVAO;//mozda moze i onaj stari VBO
-    glGenVertexArrays(1, &cubeVAO);
-    glGenBuffers(1, &cubeVBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(lightCubeVertices), lightCubeVertices, GL_STATIC_DRAW);
-    glBindVertexArray(cubeVAO);
-    //position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) nullptr);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    //light cube
-    /*unsigned int lightCubeVAO;
-    glGenVertexArrays(1, &lightCubeVAO);
-    glBindVertexArray(lightCubeVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    // note that we update the lamp's position attribute's stride to reflect the updated buffer data
-    // da imam novi lightCubeVBO onda  bi trebalo za stride da se postavi 3*sizeof(flaot)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) nullptr);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) (3*sizeof(float)));
-    glEnableVertexAttribArray(0);*/
-
-    /*Texture2D texture("resources/textures/container.jpg", GL_REPEAT, GL_LINEAR, GL_RGB);
-    Texture2D texture2("resources/textures/awesomeface.png", GL_REPEAT, GL_LINEAR, GL_RGBA);
-*/
-
-   /* shader.use();
-    shader.setInt("skybox", 0);*/
     //skybox
     std::vector<std::string> faces
-            {
-                    FileSystem::getPath("resources/textures/space/right.jpg").c_str(),
-                    FileSystem::getPath("resources/textures/space/left.jpg").c_str(),
-                    FileSystem::getPath("resources/textures/space/top.jpg").c_str(),
-                    FileSystem::getPath("resources/textures/space/bottom.jpg").c_str(),
-                    FileSystem::getPath("resources/textures/space/front.jpg").c_str(),
-                    FileSystem::getPath("resources/textures/space/back.jpg").c_str()
-            };
+    {
+            FileSystem::getPath("resources/textures/space/right.jpg").c_str(),
+            FileSystem::getPath("resources/textures/space/left.jpg").c_str(),
+            FileSystem::getPath("resources/textures/space/top.jpg").c_str(),
+            FileSystem::getPath("resources/textures/space/bottom.jpg").c_str(),
+            FileSystem::getPath("resources/textures/space/front.jpg").c_str(),
+            FileSystem::getPath("resources/textures/space/back.jpg").c_str()
+    };
 
     unsigned int cubemapTexture = loadCubemap(faces);
 
@@ -417,11 +339,6 @@ int main() {
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
-
-
-
-/*    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);*/
 
 
     // bloom - izdvajanje bljestavih fragmenata
@@ -446,6 +363,7 @@ int main() {
     unsigned int rboDepth;
     glGenRenderbuffers(1, &rboDepth);
     glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+    // setup render buffer as depth buffer
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
 
@@ -509,6 +427,9 @@ int main() {
         float ly = 1.2f-sin(currentFrame/3)*1.4+cos(currentFrame/3)*0.3;
         float lz = 4.0f * sin(currentFrame/3) - 2.1f;
 
+        float lbx = 3.2f;
+        float lby = 1.75+sin(glfwGetTime())/6;
+        float lbz = -4.4;
         //glm::vec3 lightColor = glm::vec3(1.0, 1.0, 1.0);
         glm::vec3 lightColor = glm::vec3(0.0, 1.0, 0.0);
 
@@ -516,6 +437,7 @@ int main() {
         glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glDisable(GL_CULL_FACE);
         lightBallShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
@@ -538,18 +460,21 @@ int main() {
         lightBallShader.setFloat("pointLight[0].constant", pointLight.constant);
         lightBallShader.setFloat("pointLight[0].linear", pointLight.linear);
         lightBallShader.setFloat("pointLight[0].quadratic", pointLight.quadratic);
-
         //lightBallShader.setVec3("spotLight[0].position", 0.0f+sin(currentFrame/2)*2.1f*cos(currentFrame/2)*2.3,1.0f-cos(currentFrame/2)*0.2f+sin(currentFrame/2)*1.3*cos(currentFrame/2),-3.6+sin(currentFrame/2)*1.3+cos(currentFrame/2)*1.6f);
-        lightBallShader.setVec3("spotLight[0].position", lx, ly, lz);
-        lightBallShader.setVec3("spotLight[0].direction", spotLight.direction);
-        lightBallShader.setVec3("spotLight[0].ambient", spotLight.ambient);
-        lightBallShader.setVec3("spotLight[0].diffuse", spotLight.diffuse);
-        lightBallShader.setVec3("spotLight[0].specular", spotLight.specular);
-        lightBallShader.setFloat("spotLight[0].constant", spotLight.constant);
-        lightBallShader.setFloat("spotLight[0].linear", spotLight.linear);
-        lightBallShader.setFloat("spotLight[0].quadratic", spotLight.quadratic);
-        lightBallShader.setFloat("spotLight[0].cutOff", spotLight.cutOff);
-        lightBallShader.setFloat("spotLight[0].outerCutOff", spotLight.outerCutOff);
+
+
+        lightBallShader.setVec3("dirLight.direction", glm::vec3(2.0, -2.0, -3.0));
+        lightBallShader.setVec3("dirLight.ambient", glm::vec3( 0.1));
+        lightBallShader.setVec3("dirLight.diffuse", glm::vec3( 0.6));
+        lightBallShader.setVec3("dirLight.specular", glm::vec3( 1.0));
+
+        lightBallShader.setVec3("pointLight[1].position", glm::vec3(lbx,lby,lbz));
+        lightBallShader.setVec3("pointLight[1].ambient", glm::vec3( 0.2));
+        lightBallShader.setVec3("pointLight[1].diffuse", glm::vec3( 0.7));
+        lightBallShader.setVec3("pointLight[1].specular", glm::vec3( 1.0));
+        lightBallShader.setFloat("pointLight[1].constant", pointLight.constant);
+        lightBallShader.setFloat("pointLight[1].linear", pointLight.linear);
+        lightBallShader.setFloat("pointLight[1].quadratic", pointLight.quadratic);
 
 
         //render lightBallShader
@@ -561,6 +486,15 @@ int main() {
         lightBallShader.setMat4("model", lightBallModel);
         modelLightBall.Draw(lightBallShader);
 
+        lightBallModel = glm::mat4(1.0f);
+        lightBallModel = glm::translate(lightBallModel, glm::vec3(lbx,lby,lbz));
+        lightBallModel = glm::scale(lightBallModel, glm::vec3(0.00009f*(1.0+(float)((sin(glfwGetTime()) / 2 ) * cos(rand()%10) ))));
+        //lightBallModel = glm::rotate(lightBallModel, (float)sin(currentFrame), glm::vec3(0.0f,1.0f,1.0f));
+        //lightBallModel = glm::translate(lightBallModel, glm::vec3(0.0f));
+        lightBallShader.setMat4("model", lightBallModel);
+        modelLightBall.Draw(lightBallShader);
+
+
         objectShader.use();
 
         objectShader.setVec3("viewPosition", camera.Position);
@@ -568,11 +502,6 @@ int main() {
         objectShader.setMat4("projection", projection);
         objectShader.setMat4("view", view);
 
-        /*objectShader.setVec3("dirLight.direction", glm::vec3(-20.0, -20.0, 0.0));
-        objectShader.setVec3("dirLight.ambient", glm::vec3(0.0f));
-        objectShader.setVec3("dirLight.diffuse", glm::vec3(0.0));
-        objectShader.setVec3("dirLight.specular", glm::vec3(0.0f));
-*/
         objectShader.setVec3("pointLight[0].position", lx, ly, lz);
         objectShader.setVec3("pointLight[0].ambient", glm::vec3(0.01f));
         objectShader.setVec3("pointLight[0].diffuse", glm::vec3(1.6));
@@ -583,7 +512,7 @@ int main() {
 
 
         //lightBallShader.setVec3("spotLight[0].position", 0.0f+sin(currentFrame/2)*2.1f*cos(currentFrame/2)*2.3,1.0f-cos(currentFrame/2)*0.2f+sin(currentFrame/2)*1.3*cos(currentFrame/2),-3.6+sin(currentFrame/2)*1.3+cos(currentFrame/2)*1.6f);
-        objectShader.setVec3("spotLight[0].position", glm::vec3(3.6f,(2.0f+sin(glfwGetTime())/6),-4.2f));
+        objectShader.setVec3("spotLight[0].position", glm::vec3(3.2f,(1.75f+sin(glfwGetTime())/6),-4.4f));
         objectShader.setVec3("spotLight[0].direction", spotLight.direction);
         objectShader.setVec3("spotLight[0].ambient", glm::vec3(0.0));
         objectShader.setVec3("spotLight[0].diffuse", glm::vec3(1.0));
@@ -595,16 +524,16 @@ int main() {
         objectShader.setFloat("spotLight[0].cutOff", spotLight.cutOff);
         objectShader.setFloat("spotLight[0].outerCutOff", spotLight.outerCutOff);
 
-        //glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         //postaviti ostrvo
-        glDisable(GL_CULL_FACE);
+        //glDisable(GL_CULL_FACE);
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, (-0.99f+sin(glfwGetTime())/6), -3.6f));
         model = glm::scale(model, glm::vec3(0.6f));
         objectShader.setMat4("model", model);
         island.Draw(objectShader);
-        glEnable(GL_CULL_FACE);
+
 
 
         //postaviti sneska
@@ -646,6 +575,7 @@ int main() {
         //model = glm::rotate(model, glm::radians((float)-30.0f), glm::vec3(0.0, 1.0, 0.0));
         objectShader.setMat4("model", model);
         drvo.Draw(objectShader);
+        glDisable(GL_CULL_FACE);
 
         //svetlo
         model = glm::mat4(1.0f);
@@ -654,45 +584,6 @@ int main() {
         //model = glm::rotate(model, glm::radians((float)-45.0f), glm::vec3(0.0, 1.0, 0.0));
         objectShader.setMat4("model", model);
         svetlo.Draw(objectShader);
-/*
- * komentar
- */
-
-        //draw the lamp object
-        /* lightCubeShader.use();
-         glBindVertexArray(lightCubeVAO);
-
-         lightCubeShader.setMat4("projection", projection);
-         lightCubeShader.setMat4("view", view);
-         model = glm::mat4(1.0f);
-         model = glm::translate(model, lightPos);
-         model = glm::scale(model, glm::vec3(0.15f));
-         lightCubeShader.setMat4("model", model);
-         lightCubeShader.setVec3("lightColor", lightColor);
-
-         glDrawArrays(GL_TRIANGLES, 0, 36);*/
-        // glBindVertexArray(0);
-
-
-
-        ////ovo je za cubemap environment
-        //glEnable(GL_CULL_FACE);
-        /*shader.use();
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0, 0.0, -1.0));
-        model = glm::scale(model, glm::vec3(15.0f));
-        view = camera.GetViewMatrix();
-        shader.setVec3("cameraPos", camera.Position);
-        shader.setMat4("model", model);
-        shader.setMat4("view", view);
-        shader.setMat4("projection", projection);
-
-        glBindVertexArray(VAO);
-        glActiveTexture(GL_TEXTURE0);
-        //activate cubebox texture
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);*/
 
         // skybox na kraju
 
@@ -712,7 +603,7 @@ int main() {
 
         //this goes after window implementation
         glEnable(GL_CULL_FACE);
-
+        //glCullFace(GL_BACK);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         //*********************************************
@@ -753,8 +644,6 @@ int main() {
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteVertexArrays(1, &skyboxVAO);
-    //glDeleteVertexArrays(1, &lightCubeVAO);
-    glDeleteVertexArrays(1, &cubeVAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &skyboxVBO);
     shader.deleteProgram();
@@ -864,13 +753,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
     {
         if (exposure > 0.0f)
-            exposure -= 0.5f;
+            exposure -= 0.1f;
         else
             exposure = 0.0f;
     }
     else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
     {
-        exposure += 0.5f;
+        exposure += 0.1f;
     }
 }
 
