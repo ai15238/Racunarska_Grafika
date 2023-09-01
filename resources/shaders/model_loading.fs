@@ -142,8 +142,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir){
     float theta = dot(lightDir, normalize(-light.direction));
     float epsilon = (light.cutOff - light.outerCutOff);
     float intesity = clamp((theta - light.outerCutOff)/ epsilon, 0.0, 1.0);
-//float epsilon = (light.outerCutOff - light.cutOff);
-//      float intesity = clamp((theta - light.cutOff)/ epsilon, 0.0, 1.0);
+
     vec3 ambient = light.ambient * attenuation  * vec3(texture(material.texture_diffuse1, TexCoords));
     vec3 diffuse = light.diffuse * diff * attenuation * intesity * vec3(texture(material.texture_diffuse1, TexCoords));
     vec3 specular = light.specular * spec * attenuation * intesity * vec3(texture(material.texture_specular1, TexCoords).xxx);

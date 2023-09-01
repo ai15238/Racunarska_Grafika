@@ -187,10 +187,10 @@ int main() {
     spotLight.diffuse = glm::vec3(0.9f, 0.25f, 0.1f);
     spotLight.specular = glm::vec3(0.0f, 0.0f, 0.0f);
     spotLight.constant = 1.0f;
-    spotLight.linear = 0.6f;
-    spotLight.quadratic = 0.5f;
-    spotLight.cutOff = glm::cos(glm::radians(25.0f));
-    spotLight.outerCutOff = glm::cos(glm::radians(20.0f));
+    spotLight.linear = 0.1f;
+    spotLight.quadratic = 0.1f;
+    spotLight.cutOff = glm::cos(glm::radians(30.0f));
+    spotLight.outerCutOff = glm::cos(glm::radians(50.0f));
 
     //Model figure1(FileSystem::getPath("resources/objects/low_obj_15000/low_obj_15000.obj"));
 
