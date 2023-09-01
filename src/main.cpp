@@ -191,6 +191,7 @@ int main() {
     spotLight.quadratic = 0.5f;
     spotLight.cutOff = glm::cos(glm::radians(25.0f));
     spotLight.outerCutOff = glm::cos(glm::radians(20.0f));
+
     //Model figure1(FileSystem::getPath("resources/objects/low_obj_15000/low_obj_15000.obj"));
 
     float skyboxVertices[] = {
