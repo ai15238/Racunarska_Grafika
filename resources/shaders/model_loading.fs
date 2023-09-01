@@ -86,7 +86,7 @@ void main()
     else if(alpha <0.9)
         FragColor = vec4(result, alpha);
     else
-        FragColor = vec4(result, 1.0);
+        FragColor = vec4(result, 1.0)*texture(material.texture_diffuse1, TexCoords);
 }
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir) {
