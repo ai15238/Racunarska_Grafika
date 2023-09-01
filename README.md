@@ -34,3 +34,6 @@ Napravljena je scena sneznog ostrva sa nekoliko modela iznad kojeg kruzi svetlec
 2. Cpp fajlovi idu u src folder
 3. Zaglavlja (h i hpp) fajlovi idu u include
 4. Sejderi idu u folder resources/shaders. `Vertex shader` ima ekstenziju `.vs`, `fragment shader` ima ekstenziju `.fs`
+
+### Napomena
+- u main.cpp je postavljen outerCutOff ugao da bude manji od cutOff kako bi bilo u skladu sa ulicnom lampom i sa scenom
