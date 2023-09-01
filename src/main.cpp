@@ -33,7 +33,9 @@ void renderQuad();
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-const float BOUND = 100;
+bool blinn = false;
+bool blinnKeyPressed = false;
+
 glm::vec3 position;
 
 // kamera
@@ -53,9 +55,6 @@ bool hdrKeyPressed = false;
 bool bloom = true;
 bool bloomKeyPressed = false;
 float exposure = 1.0f;
-
-//lightning
-glm::vec3 lightPos(0.0f, 0.7f, -4.4f);
 
 struct DirLight {
     glm::vec3 direction;
@@ -136,13 +135,11 @@ int main() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Shader shader("resources/shaders/cube.vs", "resources/shaders/cube.fs");
+    Shader objectShader("resources/shaders/model_loading.vs","resources/shaders/model_loading.fs");
+    Shader lightBallShader("resources/shaders/lightBallShader.vs", "resources/shaders/lightBallShader.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
-    Shader modelShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader bloomShader("resources/shaders/bloom.vs", "resources/shaders/bloom.fs");
     Shader hdrShader("resources/shaders/hdr.vs", "resources/shaders/hdr.fs");
-    Shader lightBallShader("resources/shaders/lightBallShader.vs", "resources/shaders/lightBallShader.fs");
-    Shader objectShader("resources/shaders/model_loading.vs","resources/shaders/model_loading.fs");
 
     Model island(FileSystem::getPath("resources/objects/island/island1.obj"), true);
     island.SetShaderTextureNamePrefix("material.");
@@ -173,13 +170,13 @@ int main() {
     dirLight.specular = glm::vec3(1.0, 1.0, 1.0);
 
     PointLight pointLight;
-    pointLight.position = glm::vec3(4.0f, 4.0f, 0.0);
+    pointLight.position = glm::vec3(0.0f, 0.0f, 0.0);
     pointLight.ambient = glm::vec3(0.15, 0.15, 0.15);
     pointLight.diffuse = glm::vec3(0.6f,0.6f,0.6f);
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
     pointLight.constant = 1.0f;
-    pointLight.linear = 0.05f;
-    pointLight.quadratic = 0.001f;
+    pointLight.linear = 0.3f;
+    pointLight.quadratic = 0.01f;
 
     //spotlight lamp
     SpotLight spotLight;
@@ -189,10 +186,10 @@ int main() {
     spotLight.diffuse = glm::vec3(0.9f, 0.25f, 0.1f);
     spotLight.specular = glm::vec3(0.0f, 0.0f, 0.0f);
     spotLight.constant = 1.0f;
-    spotLight.linear = 0.05f;
-    spotLight.quadratic = 0.001f;
-    spotLight.cutOff = glm::cos(glm::radians(30.0f));
-    spotLight.outerCutOff = glm::cos(glm::radians(50.0f));
+    spotLight.linear = 0.9f;
+    spotLight.quadratic = 0.1f;
+    spotLight.cutOff = glm::cos(glm::radians(15.0f));
+    spotLight.outerCutOff = glm::cos(glm::radians(30.0f));
     //Model figure1(FileSystem::getPath("resources/objects/low_obj_15000/low_obj_15000.obj"));
 
     float skyboxVertices[] = {
@@ -262,9 +259,6 @@ int main() {
     };
 
     unsigned int cubemapTexture = loadCubemap(faces);
-
-    shader.use();
-    shader.setInt("skybox", 0);
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
@@ -377,7 +371,7 @@ int main() {
         lightBallShader.setMat4("projection", projection);
         lightBallShader.setMat4("view", view);
 
-        lightBallShader.setVec3("dirLight.direction", glm::vec3(-20.0, -20.0, 0.0));
+        lightBallShader.setVec3("dirLight.direction", glm::vec3(0.0, -1.0, 0.0));
         lightBallShader.setVec3("dirLight.ambient", dirLight.ambient);
         lightBallShader.setVec3("dirLight.diffuse", dirLight.diffuse);
         lightBallShader.setVec3("dirLight.specular", dirLight.specular);
@@ -389,17 +383,15 @@ int main() {
         lightBallShader.setFloat("pointLight[0].constant", pointLight.constant);
         lightBallShader.setFloat("pointLight[0].linear", pointLight.linear);
         lightBallShader.setFloat("pointLight[0].quadratic", pointLight.quadratic);
-        //lightBallShader.setVec3("spotLight[0].position", 0.0f+sin(currentFrame/2)*2.1f*cos(currentFrame/2)*2.3,1.0f-cos(currentFrame/2)*0.2f+sin(currentFrame/2)*1.3*cos(currentFrame/2),-3.6+sin(currentFrame/2)*1.3+cos(currentFrame/2)*1.6f);
 
-
-        lightBallShader.setVec3("dirLight.direction", glm::vec3(0.0, -2.0, 0.0));
+        lightBallShader.setVec3("dirLight.direction", glm::vec3(0.0, -1.0, 0.0));
         lightBallShader.setVec3("dirLight.ambient", glm::vec3( 0.1));
         lightBallShader.setVec3("dirLight.diffuse", glm::vec3( 0.6));
         lightBallShader.setVec3("dirLight.specular", glm::vec3( 1.0));
 
         lightBallShader.setVec3("pointLight[1].position", glm::vec3(lbx,lby,lbz));
-        lightBallShader.setVec3("pointLight[1].ambient", glm::vec3( 0.2));
-        lightBallShader.setVec3("pointLight[1].diffuse", glm::vec3( 0.7));
+        lightBallShader.setVec3("pointLight[1].ambient", glm::vec3( 0.1));
+        lightBallShader.setVec3("pointLight[1].diffuse", glm::vec3( 0.9));
         lightBallShader.setVec3("pointLight[1].specular", glm::vec3( 1.0));
         lightBallShader.setFloat("pointLight[1].constant", pointLight.constant);
         lightBallShader.setFloat("pointLight[1].linear", pointLight.linear);
@@ -432,19 +424,19 @@ int main() {
         objectShader.setMat4("view", view);
 
         objectShader.setVec3("pointLight[0].position", lx, ly, lz);
-        objectShader.setVec3("pointLight[0].ambient", glm::vec3(0.07f));
-        objectShader.setVec3("pointLight[0].diffuse", glm::vec3(1.4));
+        objectShader.setVec3("pointLight[0].ambient", glm::vec3(0.001f));
+        objectShader.setVec3("pointLight[0].diffuse", glm::vec3(0.9));
         objectShader.setVec3("pointLight[0].specular", pointLight.specular);
         objectShader.setFloat("pointLight[0].constant", pointLight.constant);
         objectShader.setFloat("pointLight[0].linear", pointLight.linear);
         objectShader.setFloat("pointLight[0].quadratic", pointLight.quadratic);
 
 
-        objectShader.setVec3("spotLight[0].position", glm::vec3(3.2f,(1.75f+sin(glfwGetTime())/6),-4.4f));
+        objectShader.setVec3("spotLight[0].position", glm::vec3(lbx, lby, lbz));
         objectShader.setVec3("spotLight[0].direction", spotLight.direction);
         objectShader.setVec3("spotLight[0].ambient", glm::vec3(0.0));
-        objectShader.setVec3("spotLight[0].diffuse", glm::vec3(1.0));
-        objectShader.setVec3("spotLight[0].diffuse", glm::vec3( 1.0+(float)((sin(glfwGetTime()) / 2 ) * cos(rand()%10) )));
+        //objectShader.setVec3("spotLight[0].diffuse", glm::vec3(0.0));
+        objectShader.setVec3("spotLight[0].diffuse", glm::vec3( 0.4+(float)((sin(glfwGetTime()) / 2 ) * cos(rand()%10) )));
         objectShader.setVec3("spotLight[0].specular", spotLight.specular);
         objectShader.setFloat("spotLight[0].constant", spotLight.constant);
         objectShader.setFloat("spotLight[0].linear", spotLight.linear);
@@ -452,6 +444,7 @@ int main() {
         objectShader.setFloat("spotLight[0].cutOff", spotLight.cutOff);
         objectShader.setFloat("spotLight[0].outerCutOff", spotLight.outerCutOff);
 
+        objectShader.setInt("blinn", blinn);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         //postaviti ostrvo
@@ -565,6 +558,7 @@ int main() {
         hdrShader.setFloat("exposure", exposure);
         renderQuad();
 
+        //std::cout << (blinn ? "Blinn-Phong" : "Phong") << std::endl;
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -572,8 +566,6 @@ int main() {
 
     glDeleteVertexArrays(1, &skyboxVAO);
     glDeleteBuffers(1, &skyboxVBO);
-    shader.deleteProgram();
-    modelShader.deleteProgram();
     lightBallShader.deleteProgram();
     hdrShader.deleteProgram();
     objectShader.deleteProgram();
@@ -656,6 +648,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         glfwSetWindowShouldClose(window, true);
     }
 
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && !blinnKeyPressed)
+    {
+        blinn = !blinn;
+        blinnKeyPressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE)
+    {
+        blinnKeyPressed = false;
+    }
     if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS && !hdrKeyPressed)
     {
         hdr = !hdr;
