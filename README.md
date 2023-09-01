@@ -25,7 +25,7 @@ Napravljena je scena sneznog ostrva sa nekoliko modela iznad kojeg kruzi svetlec
 - HDR
 - Bloom
 
-#### link ka video fajlu - https://youtu.be/PENSjwb9U6s
+#### link ka video fajlu -  https://youtu.be/9VCPGd4ObyM
 
 ###### Svi modeli su skinuti sa sajta turbosquid, osim ostrva koje je preuzeto sa nekog od prethodnih projekata
 
